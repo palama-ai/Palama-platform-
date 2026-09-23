@@ -222,15 +222,27 @@ export async function recordTokenUsage(
 
 /** True if the engine owner is a real Supabase login. Null = unverifiable. */
 export async function isRealUser(userId: string): Promise<boolean | null> {
+  // Malformed ids can never be real logins — reject without a DB roundtrip.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId || '')) {
+    return false;
+  }
+  // 1) Anon RPC (SECURITY DEFINER — works WITHOUT a service-role key).
+  try {
+    const supabase = await createClient().catch(() => null);
+    if (supabase) {
+      const { data, error } = await supabase.rpc("user_exists", { p_uid: userId });
+      if (!error && typeof data === "boolean") return data;
+    }
+  } catch {}
+  // 2) Admin fallback (service-role key configured).
   try {
     const admin = await getAdminClient();
-    if (!admin) return null;
-    const { data, error } = await admin.rpc("user_exists", { p_uid: userId });
-    if (error) return null;
-    return data === true;
-  } catch {
-    return null;
-  }
+    if (admin) {
+      const { data, error } = await admin.rpc("user_exists", { p_uid: userId });
+      if (!error && typeof data === "boolean") return data;
+    }
+  } catch {}
+  return null;
 }
 
 /** True if this owner already migrated a desktop total once. */

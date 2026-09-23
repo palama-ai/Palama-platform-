@@ -93,13 +93,13 @@ export async function forwardToGateway(
       const real = await isRealUser(ownerId)
       if (real !== true) {
         return NextResponse.json(
-          { error: 'Login required: account could not be verified. Please sign in again.' },
+          { error: 'Login required: account could not be verified. If you just signed in, ask the admin to run TOKEN_USAGE_SQL.sql (user_exists) on Supabase and to match INTERNAL_API_KEY with the desktop app.' },
           { status: 401 }
         )
       }
     } catch {
       return NextResponse.json(
-        { error: 'Login required: account could not be verified. Please sign in again.' },
+        { error: 'Login required: account could not be verified. If you just signed in, ask the admin to run TOKEN_USAGE_SQL.sql (user_exists) on Supabase and to match INTERNAL_API_KEY with the desktop app.' },
         { status: 401 }
       )
     }
