@@ -17,7 +17,7 @@ export function quotaPeriodUTC(now = new Date()) {
   return { week_start: start.toISOString(), resets_at: reset.toISOString() };
 }
 
-async function getAdminClient(): Promise<any | null> {
+export async function getAdminClient(): Promise<any | null> {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -217,6 +217,19 @@ export async function recordTokenUsage(
     }
   } catch (e: any) {
     console.warn("[quota] record failed:", e?.message || e);
+  }
+}
+
+/** True if the engine owner is a real Supabase login. Null = unverifiable. */
+export async function isRealUser(userId: string): Promise<boolean | null> {
+  try {
+    const admin = await getAdminClient();
+    if (!admin) return null;
+    const { data, error } = await admin.rpc("user_exists", { p_uid: userId });
+    if (error) return null;
+    return data === true;
+  } catch {
+    return null;
   }
 }
 

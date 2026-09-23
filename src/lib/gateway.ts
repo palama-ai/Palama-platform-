@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { validateApiKey, logApiUsage } from '@/lib/api-keys'
-import { getQuota, recordTokenUsage, extractGatewayUsage, TOKEN_QUOTA_LIMIT } from '@/lib/token-usage'
+import { getQuota, recordTokenUsage, extractGatewayUsage, isRealUser, TOKEN_QUOTA_LIMIT } from '@/lib/token-usage'
 
 export type GatewayCaller =
   | { kind: 'session'; userId: string }
@@ -82,6 +82,27 @@ export async function forwardToGateway(
       { error: 'Login required: please sign in to use Palama models.' },
       { status: 401 }
     )
+  }
+  // Engine callers present their own owner string: verify it is a REAL login.
+  // (The internal key ships inside the desktop app, so prefix checks alone
+  // would allow minting fresh sb:<random-uuid> identities with new quotas.)
+  // Unverifiable (DB down) also fails closed — the quota check below would
+  // block anyway, but reject early with a clear 401.
+  if (init.caller.kind === 'engine') {
+    try {
+      const real = await isRealUser(ownerId)
+      if (real !== true) {
+        return NextResponse.json(
+          { error: 'Login required: account could not be verified. Please sign in again.' },
+          { status: 401 }
+        )
+      }
+    } catch {
+      return NextResponse.json(
+        { error: 'Login required: account could not be verified. Please sign in again.' },
+        { status: 401 }
+      )
+    }
   }
   let loggedModel = ''
   try {
