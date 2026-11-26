@@ -11,6 +11,7 @@ import { exec, execFile } from 'child_process'
 import { promisify } from 'util'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import crypto from 'crypto'
 
 const execAsync = promisify(exec)
 const execFileAsync = promisify(execFile)
@@ -209,18 +210,21 @@ export async function createContainer(
     // Ignore error if it didn't exist
   }
 
+  const vncPassword = crypto.randomBytes(12).toString('base64url')
+  const containerInternalKey = (process.env.INTERNAL_API_KEY || '').trim() || crypto.randomBytes(24).toString('base64url')
+
   const runArgs: string[] = [
     'run',
     '-d',
     '--name',
     containerName,
-    // Port mappings — map unique host ports to fixed container ports
+    // Bind container ports strictly to loopback (reverse proxy handles public auth)
     '-p',
-    `${ports.agentPort}:8001`,
+    `127.0.0.1:${ports.agentPort}:8001`,
     '-p',
-    `${ports.novncPort}:6080`,
+    `127.0.0.1:${ports.novncPort}:6080`,
     '-p',
-    `${ports.vncPort}:5900`,
+    `127.0.0.1:${ports.vncPort}:5900`,
     // Network / Host access
     '--add-host=host.docker.internal:host-gateway',
     // Environment
@@ -233,7 +237,7 @@ export async function createContainer(
     '-e',
     'SCREEN_DEPTH=24',
     '-e',
-    'VNC_PASSWORD=palama',
+    `VNC_PASSWORD=${vncPassword}`,
     '-e',
     'PALAMA_WORKSPACE_DIR=/home/user/Desktop/workstation',
     '-e',
@@ -247,7 +251,7 @@ export async function createContainer(
     '-e',
     'LLM_BASE_URL=http://host.docker.internal:20128/v1',
     '-e',
-    `INTERNAL_API_KEY=${process.env.INTERNAL_API_KEY || 'your_super_secret_key_here_for_palama_cloud'}`,
+    `INTERNAL_API_KEY=${containerInternalKey}`,
     '-e',
     'AGENT_MAX_STEPS=50',
     '-e',

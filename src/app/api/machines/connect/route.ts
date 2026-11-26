@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient, createAdminClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 import {
   startContainer,
   waitForAgentHealth,
 } from '@/lib/docker-manager'
+import { isUuid } from '@/lib/security'
 
 export async function POST(request: Request) {
   try {
@@ -23,15 +24,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { machine_id } = body
 
-    if (!machine_id) {
-      return NextResponse.json({ error: 'Missing machine_id' }, { status: 400 })
+    if (!isUuid(machine_id)) {
+      return NextResponse.json({ error: 'Invalid machine_id' }, { status: 400 })
     }
 
-    // 3. Fetch machine from database
+    // 3. Fetch machine from database strictly scoped to current user
     const { data: machine, error: fetchError } = await supabase
       .from('machines')
       .select('*')
       .eq('id', machine_id)
+      .eq('user_id', user.id)
       .single()
 
     if (fetchError || !machine) {
@@ -40,7 +42,6 @@ export async function POST(request: Request) {
 
     // 4. If already running, return it
     if (machine.status === 'ready' && machine.control_url) {
-      // Verify agent is actually healthy
       try {
         const healthRes = await fetch(`${machine.control_url}/health`, {
           signal: AbortSignal.timeout(3000),
@@ -53,13 +54,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. Try to start the container (it may be stopped)
-    const adminSupabase = await createAdminClient()
-
-    await adminSupabase
+    // 5. Try to start the container using the user's own RLS-scoped client
+    await supabase
       .from('machines')
       .update({ status: 'creating' })
       .eq('id', machine_id)
+      .eq('user_id', user.id)
 
     try {
       console.log(`[machines/connect] Starting container for machine ${machine_id}...`)
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       const finalStatus = healthy ? 'ready' : 'error'
 
       // Update machine in database
-      await adminSupabase
+      await supabase
         .from('machines')
         .update({
           status: finalStatus,
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
           ip_address: containerInfo.vncUrl,
         })
         .eq('id', machine_id)
+        .eq('user_id', user.id)
 
       return NextResponse.json({
         ...machine,
@@ -97,18 +98,19 @@ export async function POST(request: Request) {
     } catch (dockerError: any) {
       console.error(`[machines/connect] Failed to start container for ${machine_id}:`, dockerError.message)
 
-      await adminSupabase
+      await supabase
         .from('machines')
         .update({ status: 'error' })
         .eq('id', machine_id)
+        .eq('user_id', user.id)
 
       return NextResponse.json(
-        { error: 'Failed to start container', details: dockerError.message },
+        { error: 'Failed to start container' },
         { status: 503 }
       )
     }
   } catch (error: any) {
     console.error('Unexpected error in connect route:', error)
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

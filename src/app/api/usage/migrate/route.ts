@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
-import { getQuota, recordTokenUsage, hasTokenMigration } from '@/lib/token-usage'
+import { getQuota, recordTokenUsage, hasTokenMigration, isRealUser } from '@/lib/token-usage'
+
+const MAX_MIGRATION_TOKENS = 50_000_000
 
 /**
  * POST /api/usage/migrate — one-time import of a desktop-local token total.
@@ -11,13 +13,20 @@ import { getQuota, recordTokenUsage, hasTokenMigration } from '@/lib/token-usage
 export async function POST(request: Request) {
   const caller = await resolveGatewayCaller(request)
   const userId = caller ? resolveOwnerId(caller) : null
-  if (!userId) {
+  if (!caller || !userId) {
     return NextResponse.json({ error: 'Login required' }, { status: 401 })
+  }
+  if (caller.kind === 'engine') {
+    const real = await isRealUser(userId)
+    if (real !== true) {
+      return NextResponse.json({ error: 'Login required' }, { status: 401 })
+    }
   }
   let total = 0
   try {
     const body = await request.json()
-    total = Math.max(0, Math.floor(Number(body?.total_tokens) || 0))
+    const raw = Number(body?.total_tokens)
+    total = Number.isFinite(raw) ? Math.min(MAX_MIGRATION_TOKENS, Math.max(0, Math.floor(raw))) : 0
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }

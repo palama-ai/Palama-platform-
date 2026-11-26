@@ -8,6 +8,6 @@ export const dynamic = 'force-dynamic'
  * min supported version, and optional extra models for Palama Desktop.
  */
 export async function GET() {
-  const cfg = await getDesktopServerConfig(true)
+  const cfg = await getDesktopServerConfig(false)
   return NextResponse.json(cfg)
 }

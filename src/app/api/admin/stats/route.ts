@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/utils/supabase/server'
+import { isAdminUser } from '@/lib/security'
 
 export async function GET() {
   try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!isAdminUser(user)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const adminSupabase = await createAdminClient()
 
     // 1. Fetch real total registered users from Supabase Auth
@@ -58,7 +68,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('Failed to fetch real admin stats:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch admin stats' },
+      { error: 'Failed to fetch admin stats' },
       { status: 500 }
     )
   }

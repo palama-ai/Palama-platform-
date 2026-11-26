@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { resolveGatewayCaller, resolveOwnerId, forwardToGateway } from '@/lib/gateway'
-import { getQuota } from '@/lib/token-usage'
+import { getQuota, recordTokenUsage } from '@/lib/token-usage'
+import { logApiUsage } from '@/lib/api-keys'
 
 /**
  * POST /api/images/generations — image generation via Palama.
@@ -59,6 +60,10 @@ export async function POST(request: Request) {
         body,
       })
       const text = await upstream.text()
+      if (upstream.ok) {
+        await logApiUsage(userId, 'gateway:/images/generations', model)
+        await recordTokenUsage(userId, { model, prompt: 250, completion: 1000, estimated: true })
+      }
       return new NextResponse(text, {
         status: upstream.status,
         headers: { 'Content-Type': upstream.headers.get('content-type') || 'application/json' },

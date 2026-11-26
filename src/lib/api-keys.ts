@@ -74,6 +74,16 @@ export async function validateApiKey(bearer: string): Promise<KeyOwner> {
  *  function so engine / api-key callers (no cookie session) can write. */
 export async function logApiUsage(userId: string, endpoint: string, model = ""): Promise<void> {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceKey) {
+      const { createClient: createAdmin } = await import("@supabase/supabase-js");
+      const admin = createAdmin(supabaseUrl, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { error } = await admin.from("api_usage").insert({ user_id: userId, endpoint, model });
+      if (!error) return;
+    }
     const supabase = await createClient();
     const { error } = await supabase.rpc("log_api_usage", {
       p_user_id: userId,
@@ -81,9 +91,7 @@ export async function logApiUsage(userId: string, endpoint: string, model = ""):
       p_model: model,
     });
     if (error) {
-      console.warn("[usage] rpc failed:", error.message, "| falling back to direct insert");
-      const { error: e2 } = await supabase.from("api_usage").insert({ user_id: userId, endpoint, model });
-      if (e2) console.warn("[usage] direct insert failed:", e2.message);
+      await supabase.from("api_usage").insert({ user_id: userId, endpoint, model });
     }
   } catch (e: any) {
     console.warn("[usage] unexpected:", e?.message || e);

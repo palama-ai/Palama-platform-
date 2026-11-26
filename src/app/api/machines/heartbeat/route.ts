@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { getConfiguredInternalKey, isUuid } from '@/lib/security'
 
 export async function POST(request: Request) {
   try {
@@ -19,16 +20,31 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { machine_id } = body
 
-    if (!machine_id) {
-      return NextResponse.json({ error: 'Missing machine_id' }, { status: 400 })
+    if (!isUuid(machine_id)) {
+      return NextResponse.json({ error: 'Invalid machine_id' }, { status: 400 })
+    }
+
+    // Verify ownership before forwarding heartbeat
+    const { data: owned } = await supabase
+      .from('machines')
+      .select('id')
+      .eq('id', machine_id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!owned) {
+      return NextResponse.json({ error: 'Machine not found' }, { status: 404 })
     }
 
     // 3. Send heartbeat to Python orchestrator
-    const orchestratorUrl = process.env.PALAMA_INFRA_ORCHESTRATOR_URL || 'http://localhost:8000'
-    const internalApiKey = process.env.INTERNAL_API_KEY || 'your_super_secret_key_here_for_palama_cloud'
+    const orchestratorUrl = (process.env.PALAMA_INFRA_ORCHESTRATOR_URL || 'http://localhost:8000').replace(/\/+$/, '')
+    const internalApiKey = getConfiguredInternalKey()
+    if (!internalApiKey) {
+      return NextResponse.json({ success: true, status: 'alive' })
+    }
 
     try {
-      const response = await fetch(`${orchestratorUrl}/api/v1/machines/${machine_id}/heartbeat`, {
+      const response = await fetch(`${orchestratorUrl}/api/v1/machines/${encodeURIComponent(machine_id)}/heartbeat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

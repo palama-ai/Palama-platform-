@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import crypto from 'node:crypto'
 import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
+import { isAllowedOAuthRedirectUri } from '@/lib/security'
 
 /**
  * Platform-hosted OAuth for Google connectors (desktop launch-safe).
@@ -30,31 +32,29 @@ const GOOGLE_PROVIDERS = new Set([
   'google_calendar', 'google_forms',
 ])
 
-function authed(request: Request) {
-  return resolveGatewayCaller(request).then((caller) => {
-    const userId = caller ? resolveOwnerId(caller) : null
-    return userId ? true : false
-  })
+async function authedOwner(request: Request): Promise<string | null> {
+  const caller = await resolveGatewayCaller(request)
+  return caller ? resolveOwnerId(caller) : null
 }
 
 export async function GET(request: Request) {
-  if (!(await authed(request))) {
+  const authedOwnerId = await authedOwner(request)
+  if (!authedOwnerId) {
     return NextResponse.json({ error: 'Login required' }, { status: 401 })
   }
   const { searchParams } = new URL(request.url)
   const provider = (searchParams.get('provider') || '').toLowerCase()
-  const connectorId = searchParams.get('connector_id') || provider
+  const connectorId = (searchParams.get('connector_id') || provider).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40)
   const redirectUri = searchParams.get('redirect_uri') || ''
-  // Owner travels inside `state` (Google echoes it to the desktop callback).
-  const owner = (searchParams.get('owner') || '').replace(/[^a-zA-Z0-9:_\-]/g, '').slice(0, 64)
   if (!GOOGLE_PROVIDERS.has(provider)) {
     return NextResponse.json({ error: `Unsupported provider: ${provider}` }, { status: 400 })
   }
   const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim()
-  if (!clientId || !redirectUri) {
-    return NextResponse.json({ error: 'OAuth not configured (client_id/redirect_uri)' }, { status: 500 })
+  if (!clientId || !redirectUri || !isAllowedOAuthRedirectUri(redirectUri)) {
+    return NextResponse.json({ error: 'Invalid or unconfigured redirect_uri' }, { status: 400 })
   }
-  const state = owner ? `${connectorId}~${owner}` : connectorId
+  const nonce = crypto.randomBytes(12).toString('base64url')
+  const state = `${connectorId}~sb:${authedOwnerId}~${nonce}`
   const url =
     'https://accounts.google.com/o/oauth2/v2/auth?' +
     `client_id=${encodeURIComponent(clientId)}&` +
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!(await authed(request))) {
+  if (!(await authedOwner(request))) {
     return NextResponse.json({ error: 'Login required' }, { status: 401 })
   }
   let body: any = {}
@@ -91,8 +91,8 @@ export async function POST(request: Request) {
   try {
     if (op === 'exchange') {
       const { code, redirect_uri } = body
-      if (!code || !redirect_uri) {
-        return NextResponse.json({ error: 'code and redirect_uri required' }, { status: 400 })
+      if (!code || !redirect_uri || !isAllowedOAuthRedirectUri(String(redirect_uri))) {
+        return NextResponse.json({ error: 'Valid code and redirect_uri required' }, { status: 400 })
       }
       const res = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',

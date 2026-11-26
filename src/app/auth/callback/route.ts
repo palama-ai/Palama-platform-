@@ -1,25 +1,33 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { isSafeNextPath } from '@/lib/security'
+
+function trustedHostForOrigin(request: Request, origin: string): string {
+  const forwardedHost = (request.headers.get('x-forwarded-host') || '').split(',')[0].trim().toLowerCase()
+  const requestHost = new URL(origin).host.toLowerCase()
+  const allowedHosts = new Set<string>([requestHost])
+  for (const h of (process.env.ALLOWED_HOSTS || '').split(',')) {
+    const clean = h.trim().toLowerCase()
+    if (clean) allowedHosts.add(clean)
+  }
+  if (forwardedHost && allowedHosts.has(forwardedHost)) {
+    return `https://${forwardedHost}`
+  }
+  return origin
+}
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // if "next" is in param, use it as redirect path
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = isSafeNextPath(searchParams.get('next'))
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+      const redirectBase = isLocalEnv ? origin : trustedHostForOrigin(request, origin)
+      return NextResponse.redirect(`${redirectBase}${next}`)
     }
   }
 

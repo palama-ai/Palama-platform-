@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { getConfiguredInternalKey } from '@/lib/security'
 
 /**
  * GET /api/account/export — download the signed-in user's data:
@@ -20,13 +21,17 @@ export async function GET() {
     try {
       const agentUrl = (process.env.PALAMA_AGENT_URL || 'http://127.0.0.1:8391').replace(/\/+$/, '')
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      const internalKey = getConfiguredInternalKey()
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`
-      } else if (process.env.INTERNAL_API_KEY) {
-        headers['Authorization'] = `Bearer ${process.env.INTERNAL_API_KEY.trim()}`
+      } else if (internalKey) {
+        headers['Authorization'] = `Bearer ${internalKey}`
+        headers['X-Palama-Owner'] = `sb:${user.id}`
       }
-      const res = await fetch(`${agentUrl}/api/v1/agent/memory/export`, { headers, cache: 'no-store' })
-      if (res.ok) agentData = await res.json()
+      if (headers['Authorization']) {
+        const res = await fetch(`${agentUrl}/api/v1/agent/memory/export`, { headers, cache: 'no-store' })
+        if (res.ok) agentData = await res.json()
+      }
     } catch (e) {
       console.warn('Agent export unavailable:', e)
     }
@@ -45,7 +50,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('Account export error:', error)
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

@@ -19,12 +19,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Parse request parameters
+    // 2. Parse & bound request parameters
     const body = await request.json()
-    const { name, os, tier, cpu_cores, memory_gb, restore } = body
+    const { name, os, tier } = body
 
-    if (!name || !os || !tier) {
+    if (typeof name !== 'string' || !name.trim() || typeof os !== 'string' || typeof tier !== 'string') {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
+    }
+
+    const TIER_SPECS: Record<string, { cpu: number; mem: number }> = {
+      standard: { cpu: 2, mem: 4 },
+      basic: { cpu: 2, mem: 4 },
+      pro: { cpu: 4, mem: 8 },
+      performance: { cpu: 4, mem: 8 },
+    }
+    const spec = TIER_SPECS[tier.trim().toLowerCase()] || TIER_SPECS.standard
+
+    // Enforce per-user container quota
+    const { count: existingCount } = await supabase
+      .from('machines')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    if ((existingCount ?? 0) >= 5) {
+      return NextResponse.json({ error: 'Maximum number of machines reached (5).' }, { status: 429 })
     }
 
     // 3. Create the machine entry in database with status 'creating'
@@ -32,19 +49,19 @@ export async function POST(request: Request) {
       .from('machines')
       .insert({
         user_id: user.id,
-        name,
-        os,
-        tier,
+        name: name.trim().slice(0, 64),
+        os: os.trim().slice(0, 32),
+        tier: tier.trim().slice(0, 32),
         status: 'creating',
-        cpu_cores: cpu_cores || 2,
-        memory_gb: memory_gb || 4,
+        cpu_cores: spec.cpu,
+        memory_gb: spec.mem,
       })
       .select()
       .single()
 
     if (dbError) {
       console.error('Database Error:', dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create machine record' }, { status: 500 })
     }
 
     // 4. Create a real Docker container
@@ -53,9 +70,9 @@ export async function POST(request: Request) {
 
       const containerInfo = await createContainer(
         machineData.id,
-        name,
-        cpu_cores || 2,
-        memory_gb || 4
+        name.trim().slice(0, 64),
+        spec.cpu,
+        spec.mem
       )
 
       console.log(`[machines/create] Container created: ${containerInfo.containerName}`)
@@ -100,12 +117,12 @@ export async function POST(request: Request) {
         .eq('id', machineData.id)
 
       return NextResponse.json(
-        { error: 'Failed to create Docker container', details: dockerError.message },
+        { error: 'Failed to create Docker container' },
         { status: 503 }
       )
     }
   } catch (error: any) {
     console.error('Unexpected error creating machine:', error)
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

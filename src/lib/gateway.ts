@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { validateApiKey, logApiUsage } from '@/lib/api-keys'
 import { getQuota, recordTokenUsage, extractGatewayUsage, isRealUser } from '@/lib/token-usage'
+import { checkRateLimit, clientIdentifier, verifyInternalKey } from '@/lib/security'
 
 export type GatewayCaller =
   | { kind: 'session'; userId: string }
@@ -26,14 +27,21 @@ export async function resolveGatewayCaller(request: Request): Promise<GatewayCal
 
   const bearer = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim()
   if (bearer) {
-    const internalKey = (process.env.INTERNAL_API_KEY || '').trim()
-    if (internalKey && bearer === internalKey) {
+    if (verifyInternalKey(bearer)) {
       const owner = (request.headers.get('x-palama-owner') || '').trim().slice(0, 128)
       if (owner) return { kind: 'engine', ownerId: owner }
       return null
     }
     const owner = await validateApiKey(bearer)
     if (owner) return { kind: 'api-key', userId: owner.userId }
+
+    // Allow authenticated Desktop / API callers to forward their Supabase JWT directly
+    if (bearer.split('.').length === 3 && supabase) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser(bearer)
+        if (user) return { kind: 'session', userId: user.id }
+      } catch {}
+    }
     return null
   }
   return null
@@ -109,6 +117,13 @@ export async function forwardToGateway(
     const parsed = init.body ? JSON.parse(init.body) : null
     if (parsed && typeof parsed.model === 'string') loggedModel = parsed.model.slice(0, 120)
   } catch {}
+  const rl = checkRateLimit(`gw:${ownerId}`, 120, 60_000)
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait a moment and try again.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
+    )
+  }
   await logApiUsage(ownerId, `gateway:${path}`, loggedModel)
   // ── Weekly token quota (server-side, tamper-proof) ──
   // Every model call flows through here, so this gate cannot be bypassed by

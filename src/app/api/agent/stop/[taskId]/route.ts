@@ -1,22 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
+import { getConfiguredInternalKey, isSafeTaskId } from '@/lib/security'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
+  const caller = await resolveGatewayCaller(request)
+  const ownerId = caller ? resolveOwnerId(caller) : null
+  if (!caller || !ownerId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { taskId } = await params
-  const agentUrl = process.env.PALAMA_AGENT_URL || 'http://localhost:8001'
+  if (!isSafeTaskId(taskId)) {
+    return NextResponse.json({ error: 'Invalid taskId' }, { status: 400 })
+  }
+
+  const agentUrl = (process.env.PALAMA_AGENT_URL || 'http://localhost:8001').replace(/\/+$/, '')
+  const headers: Record<string, string> = {}
+  const authHeader = request.headers.get('authorization')
+  const internalKey = getConfiguredInternalKey()
+  if (authHeader) headers['Authorization'] = authHeader
+  else if (internalKey) headers['Authorization'] = `Bearer ${internalKey}`
 
   try {
     const agentResponse = await fetch(
-      `${agentUrl}/api/v1/agent/stop/${taskId}`,
-      { method: 'POST' }
+      `${agentUrl}/api/v1/agent/stop/${encodeURIComponent(taskId)}`,
+      { method: 'POST', headers }
     )
 
     if (!agentResponse.ok) {
-      const errText = await agentResponse.text()
       return NextResponse.json(
-        { error: errText },
+        { error: 'Failed to stop agent task' },
         { status: agentResponse.status }
       )
     }
@@ -25,8 +41,9 @@ export async function POST(
     return NextResponse.json(result)
 
   } catch (error: any) {
+    console.error('Stop agent error:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to stop agent' },
+      { error: 'Failed to stop agent' },
       { status: 500 }
     )
   }

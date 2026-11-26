@@ -58,6 +58,10 @@ export default function DesktopAuthPage() {
       access_token: session.access_token,
       refresh_token: session.refresh_token,
     });
+    const reqState = new URLSearchParams(window.location.search).get("state");
+    if (reqState && /^[a-zA-Z0-9._-]{8,128}$/.test(reqState)) {
+      params.set("state", reqState);
+    }
     setStatus("sent");
     window.location.href = `palama://auth?${params.toString()}`;
   };

@@ -65,6 +65,6 @@ export async function GET() {
     return NextResponse.json({ success: true, models: [], count: 0 })
   } catch (error: any) {
     console.error('Failed to fetch models route:', error)
-    return NextResponse.json({ error: error.message || 'Failed to fetch models' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500 })
   }
 }

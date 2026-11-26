@@ -36,18 +36,10 @@ export async function getAdminClient(): Promise<any | null> {
 export async function getWeeklyUsage(userId: string): Promise<number | null> {
   if (!userId) return 0;
   try {
-    const supabase = await createClient().catch(() => null);
-    if (supabase) {
-      const { data, error } = await supabase.rpc("weekly_token_usage", { p_user_id: userId });
-      if (!error && data !== null && data !== undefined) return Number(data) || 0;
-    }
-  } catch {}
-  try {
     const admin = await getAdminClient();
     if (admin) {
       const { data, error } = await admin.rpc("weekly_token_usage", { p_user_id: userId });
       if (!error && data !== null && data !== undefined) return Number(data) || 0;
-      // Fallback: sum directly (service role bypasses RLS).
       const { week_start } = quotaPeriodUTC();
       const { data: rows, error: e2 } = await admin
         .from("token_usage")
@@ -57,6 +49,13 @@ export async function getWeeklyUsage(userId: string): Promise<number | null> {
       if (!e2 && Array.isArray(rows)) {
         return rows.reduce((s: number, r: any) => s + (Number(r.total_tokens) || 0), 0);
       }
+    }
+  } catch {}
+  try {
+    const supabase = await createClient().catch(() => null);
+    if (supabase) {
+      const { data, error } = await supabase.rpc("weekly_token_usage", { p_user_id: userId });
+      if (!error && data !== null && data !== undefined) return Number(data) || 0;
     }
   } catch {}
   return null;
@@ -188,19 +187,6 @@ export async function recordTokenUsage(
   const completion = Math.max(0, Math.floor(usage.completion || 0));
   const estimated = !!usage.estimated;
   try {
-    const supabase = await createClient().catch(() => null);
-    if (supabase) {
-      const { error } = await supabase.rpc("record_token_usage", {
-        p_user_id: userId,
-        p_model: model,
-        p_prompt: prompt,
-        p_completion: completion,
-        p_estimated: estimated,
-      });
-      if (!error) return;
-    }
-  } catch {}
-  try {
     const admin = await getAdminClient();
     if (admin) {
       const { error } = await admin.rpc("record_token_usage", {
@@ -218,6 +204,21 @@ export async function recordTokenUsage(
         completion_tokens: completion,
         estimated,
       });
+      return;
+    }
+  } catch (e: any) {
+    console.warn("[quota] admin record failed:", e?.message || e);
+  }
+  try {
+    const supabase = await createClient().catch(() => null);
+    if (supabase) {
+      await supabase.rpc("record_token_usage", {
+        p_user_id: userId,
+        p_model: model,
+        p_prompt: prompt,
+        p_completion: completion,
+        p_estimated: estimated,
+      });
     }
   } catch (e: any) {
     console.warn("[quota] record failed:", e?.message || e);
@@ -226,23 +227,20 @@ export async function recordTokenUsage(
 
 /** True if the engine owner is a real Supabase login. Null = unverifiable. */
 export async function isRealUser(userId: string): Promise<boolean | null> {
-  // Malformed ids can never be real logins — reject without a DB roundtrip.
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId || '')) {
     return false;
   }
-  // 1) Anon RPC (SECURITY DEFINER — works WITHOUT a service-role key).
-  try {
-    const supabase = await createClient().catch(() => null);
-    if (supabase) {
-      const { data, error } = await supabase.rpc("user_exists", { p_uid: userId });
-      if (!error && typeof data === "boolean") return data;
-    }
-  } catch {}
-  // 2) Admin fallback (service-role key configured).
   try {
     const admin = await getAdminClient();
     if (admin) {
       const { data, error } = await admin.rpc("user_exists", { p_uid: userId });
+      if (!error && typeof data === "boolean") return data;
+    }
+  } catch {}
+  try {
+    const supabase = await createClient().catch(() => null);
+    if (supabase) {
+      const { data, error } = await supabase.rpc("user_exists", { p_uid: userId });
       if (!error && typeof data === "boolean") return data;
     }
   } catch {}
@@ -252,14 +250,14 @@ export async function isRealUser(userId: string): Promise<boolean | null> {
 /** True if this owner already migrated a desktop total once. */
 export async function hasTokenMigration(userId: string): Promise<boolean> {
   try {
-    const supabase = await createClient().catch(() => null);
-    if (supabase) {
-      const { data } = await supabase.rpc("has_token_migration", { p_user_id: userId });
-      if (typeof data === "boolean") return data;
-    }
     const admin = await getAdminClient();
     if (admin) {
       const { data } = await admin.rpc("has_token_migration", { p_user_id: userId });
+      if (typeof data === "boolean") return data;
+    }
+    const supabase = await createClient().catch(() => null);
+    if (supabase) {
+      const { data } = await supabase.rpc("has_token_migration", { p_user_id: userId });
       if (typeof data === "boolean") return data;
     }
   } catch {}

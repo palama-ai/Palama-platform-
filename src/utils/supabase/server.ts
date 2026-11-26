@@ -21,8 +21,15 @@ const customFetch = async (...args: Parameters<typeof fetch>) => {
 
 export async function createClient() {
   const cookieStore = await cookies()
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vlroxlrxpnvovajohids.supabase.co'
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_XXBO_7SbYXz3VCI0F0vtsw_9LeT9tgz'
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+  const anonKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    ''
+  ).trim()
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL / ANON_KEY) are not configured.')
+  }
 
   return createServerClient(
     supabaseUrl,
@@ -52,17 +59,16 @@ export async function createClient() {
 }
 
 export async function createAdminClient() {
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 
-  if (!supabaseServiceKey) {
-    console.warn('SUPABASE_SERVICE_ROLE_KEY is not defined. Falling back to anon key (RLS might block updates).')
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin database operations.')
   }
 
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_XXBO_7SbYXz3VCI0F0vtsw_9LeT9tgz'
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vlroxlrxpnvovajohids.supabase.co'
-  const client = createServerClient(
+  return createServerClient(
     supabaseUrl,
-    supabaseServiceKey || anonKey,
+    supabaseServiceKey,
     {
       global: {
         fetch: customFetch,
@@ -77,16 +83,4 @@ export async function createAdminClient() {
       },
     }
   )
-
-  // Fallback: If service key is missing, authenticate using test credentials so RLS doesn't block updates
-  if (!supabaseServiceKey) {
-    const email = 'aliouiwin11@gmail.com'
-    const password = '123456'
-    const { error } = await client.auth.signInWithPassword({ email, password })
-    if (error) {
-      console.warn('Admin client fallback sign-in failed:', error.message)
-    }
-  }
-
-  return client
 }

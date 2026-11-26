@@ -1,9 +1,22 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './utils/supabase/middleware'
 
+function allowedOrigin(request: NextRequest): string {
+  const origin = (request.headers.get('origin') || '').trim()
+  const selfOrigin = request.nextUrl.origin
+  if (!origin) return selfOrigin
+  if (origin === selfOrigin) return origin
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return origin
+  if (origin === 'null' || origin.startsWith('app://')) return origin
+  const extra = (process.env.ALLOWED_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean)
+  if (extra.includes(origin)) return origin
+  return selfOrigin
+}
+
 function corsHeaders(request: NextRequest): Record<string, string> {
   return {
-    'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+    'Access-Control-Allow-Origin': allowedOrigin(request),
+    'Vary': 'Origin',
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Max-Age': '86400',

@@ -89,31 +89,16 @@ export default function AdminDashboardView() {
     fetchModels();
   }, []);
 
-  // Delete model handler
+  // Delete model handler (client catalog filter; direct unauthenticated agent calls disabled)
   const handleDeleteModel = async (modelId: string) => {
-    if (!confirm(`Are you sure you want to remove model "${modelId}" from the active registry?`)) {
+    if (!confirm(`Are you sure you want to remove model "${modelId}" from the active catalog view?`)) {
       return;
     }
 
     setDeletingId(modelId);
     try {
-      const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://localhost:8001";
-      const res = await fetch(`${AGENT_URL}/api/v1/models/${encodeURIComponent(modelId)}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        setModels(prev => prev.filter(m => m.id !== modelId));
-        showNotification(`Model "${modelId}" removed successfully.`);
-      } else {
-        // Fallback local state removal if agent API endpoint is unreachable
-        setModels(prev => prev.filter(m => m.id !== modelId));
-        showNotification(`Model "${modelId}" removed from catalog.`);
-      }
-    } catch (e) {
-      // Local removal
       setModels(prev => prev.filter(m => m.id !== modelId));
-      showNotification(`Model "${modelId}" removed.`);
+      showNotification(`Model "${modelId}" removed from view.`);
     } finally {
       setDeletingId(null);
     }

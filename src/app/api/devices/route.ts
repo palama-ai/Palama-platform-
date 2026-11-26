@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
         await supabase.from('machines').delete().eq('id', deviceId).eq('user_id', user.id)
       } catch {}
     } else if (action === 'generate_pairing_code') {
-      const code = `PALAMA-${Math.floor(100000 + Math.random() * 900000)}`
+      const code = `PALAMA-${crypto.randomInt(100000, 1000000)}`
       return NextResponse.json({
         success: true,
         pairing_code: code,

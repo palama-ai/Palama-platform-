@@ -12,6 +12,7 @@ export async function GET() {
   const { data, error: dbError } = await supabase
     .from('api_keys')
     .select('id, name, prefix, last_used_at, revoked, created_at')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   if (dbError) {
     return NextResponse.json({ error: dbError.message }, { status: 500 })
@@ -33,6 +34,15 @@ export async function POST(request: Request) {
       name = body.name.trim().slice(0, 60)
     }
   } catch {}
+
+  const { count: keyCount } = await supabase
+    .from('api_keys')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('revoked', false)
+  if ((keyCount ?? 0) >= 20) {
+    return NextResponse.json({ error: 'Maximum number of active API keys reached (20).' }, { status: 429 })
+  }
 
   const { key, hash, prefix } = generateApiKey()
   const { data, error: dbError } = await supabase

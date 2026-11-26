@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { validateApiKey } from '@/lib/api-keys'
+import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
+import { getAdminClient, isRealUser } from '@/lib/token-usage'
 
 const ALLOWED_KINDS = new Set(['task', 'thinking', 'action', 'complete', 'error'])
 const MAX_TEXT = 6000
@@ -63,25 +65,17 @@ function cleanScreenshot(s: any): { step_file: string; jpg_b64: string } | null 
  * training-ready records (never raw dumps).
  */
 export async function POST(request: Request) {
-  // ── Auth (same three identities as the gateway proxy) ──
-  let ownerId = ''
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) ownerId = user.id
-  } catch {}
-  if (!ownerId) {
-    const bearer = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim()
-    const internalKey = (process.env.INTERNAL_API_KEY || '').trim()
-    if (internalKey && bearer && bearer === internalKey) {
-      ownerId = (request.headers.get('x-palama-owner') || '').trim().slice(0, 128) || 'engine'
-    } else {
-      const owner = await validateApiKey(bearer)
-      if (owner) ownerId = owner.userId
-    }
-  }
-  if (!ownerId) {
+  // ── Auth (session, API key, JWT bearer, or verified engine + owner) ──
+  const caller = await resolveGatewayCaller(request)
+  const ownerId = caller ? resolveOwnerId(caller) : null
+  if (!caller || !ownerId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  if (caller.kind === 'engine') {
+    const real = await isRealUser(ownerId)
+    if (real !== true) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   // ── Parse + clean ──
@@ -134,8 +128,19 @@ export async function POST(request: Request) {
     screenshots,
   }
 
-  // ── Store via SECURITY DEFINER (no service key needed) ──
+  // ── Store via service_role admin client first; fallback to SECURITY DEFINER RPC ──
   try {
+    const admin = await getAdminClient()
+    if (admin) {
+      const { data, error } = await admin.rpc('ingest_training_event', {
+        p_owner: ownerId,
+        p_task_id: taskId,
+        p_kind: 'task',
+        p_consent: body.consent_training !== false,
+        p_payload: payload,
+      })
+      if (!error) return NextResponse.json({ success: true, id: data })
+    }
     const { createClient: createAnon } = await import('@supabase/supabase-js')
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
     const anon =

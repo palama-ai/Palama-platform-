@@ -1,23 +1,42 @@
 import { NextRequest } from 'next/server'
+import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
+import { getConfiguredInternalKey, isSafeTaskId } from '@/lib/security'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const { taskId } = await params
+  const caller = await resolveGatewayCaller(request)
+  const ownerId = caller ? resolveOwnerId(caller) : null
+  if (!caller || !ownerId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
 
-  const { searchParams } = new URL(request.url)
-  const agentUrl = searchParams.get('control_url') || process.env.PALAMA_AGENT_URL || 'http://localhost:8001'
+  const { taskId } = await params
+  if (!isSafeTaskId(taskId)) {
+    return new Response(JSON.stringify({ error: 'Invalid taskId' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Never trust client-supplied control_url (prevents SSRF & INTERNAL_API_KEY exfiltration)
+  const agentUrl = (process.env.PALAMA_AGENT_URL || 'http://localhost:8001').replace(/\/+$/, '')
+  const internalKey = getConfiguredInternalKey()
+  const headers: Record<string, string> = { Accept: 'text/event-stream' }
+  const authHeader = request.headers.get('authorization')
+  if (authHeader) headers['Authorization'] = authHeader
+  else if (internalKey) headers['Authorization'] = `Bearer ${internalKey}`
 
   try {
     // Proxy SSE stream from Agent Engine to browser
     const agentResponse = await fetch(
-      `${agentUrl}/api/v1/agent/stream/${taskId}`,
+      `${agentUrl}/api/v1/agent/stream/${encodeURIComponent(taskId)}`,
       {
-        headers: {
-          'Accept': 'text/event-stream',
-          'Authorization': `Bearer ${(process.env.INTERNAL_API_KEY || '').trim()}`
-        },
+        headers,
         // @ts-ignore — needed for streaming
         cache: 'no-store',
       }
