@@ -3,58 +3,98 @@
 -- Prerequisite: Ensure SUPABASE_SERVICE_ROLE_KEY is configured in Vercel / Next.js server environment.
 
 -- 1. Lock down public.platform_config (public read-only, writes restricted to service_role)
-ALTER TABLE IF EXISTS public.platform_config ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF to_regclass('public.platform_config') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.platform_config ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public read of platform_config" ON public.platform_config';
+    EXECUTE $p$
+      CREATE POLICY "Allow public read of platform_config"
+        ON public.platform_config
+        FOR SELECT
+        TO anon, authenticated
+        USING (true)
+    $p$;
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.platform_config FROM PUBLIC, anon, authenticated';
+    EXECUTE 'GRANT SELECT ON public.platform_config TO anon, authenticated';
+  END IF;
+END $$;
 
-DROP POLICY IF EXISTS "Allow public read of platform_config" ON public.platform_config;
-CREATE POLICY "Allow public read of platform_config"
-  ON public.platform_config
-  FOR SELECT
-  TO anon, authenticated
-  USING (true);
+-- 2. Lock down api_keys, api_usage, machines, token_usage, waitlist, and training_events RLS
+-- Casting both sides with ::text handles both uuid and text user_id columns safely (avoids ERROR 42883).
+DO $$
+BEGIN
+  IF to_regclass('public.api_keys') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Users read own api_keys" ON public.api_keys';
+    EXECUTE 'DROP POLICY IF EXISTS "Users manage own api_keys" ON public.api_keys';
+    EXECUTE $p$
+      CREATE POLICY "Users read own api_keys"
+        ON public.api_keys FOR SELECT TO authenticated
+        USING (auth.uid()::text = user_id::text)
+    $p$;
+    EXECUTE $p$
+      CREATE POLICY "Users manage own api_keys"
+        ON public.api_keys FOR ALL TO authenticated
+        USING (auth.uid()::text = user_id::text)
+        WITH CHECK (auth.uid()::text = user_id::text)
+    $p$;
+  END IF;
 
-REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.platform_config FROM PUBLIC, anon, authenticated;
-GRANT SELECT ON public.platform_config TO anon, authenticated;
+  IF to_regclass('public.machines') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.machines ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Users manage own machines" ON public.machines';
+    EXECUTE $p$
+      CREATE POLICY "Users manage own machines"
+        ON public.machines FOR ALL TO authenticated
+        USING (auth.uid()::text = user_id::text)
+        WITH CHECK (auth.uid()::text = user_id::text)
+    $p$;
+  END IF;
 
--- 2. Lock down api_keys, api_usage, machines, and token_usage RLS to owner only
-ALTER TABLE IF EXISTS public.api_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.api_usage ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.machines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.token_usage ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.training_events ENABLE ROW LEVEL SECURITY;
+  IF to_regclass('public.token_usage') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.token_usage ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Users read own token_usage" ON public.token_usage';
+    EXECUTE 'DROP POLICY IF EXISTS "token_usage_select_own" ON public.token_usage';
+    EXECUTE $p$
+      CREATE POLICY "Users read own token_usage"
+        ON public.token_usage FOR SELECT TO authenticated
+        USING (auth.uid()::text = user_id::text)
+    $p$;
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.token_usage FROM PUBLIC, anon, authenticated';
+  END IF;
 
-DROP POLICY IF EXISTS "Users read own api_keys" ON public.api_keys;
-CREATE POLICY "Users read own api_keys"
-  ON public.api_keys FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
+  IF to_regclass('public.api_usage') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.api_usage ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "Users read own api_usage" ON public.api_usage';
+    EXECUTE 'DROP POLICY IF EXISTS "api_usage_select_own" ON public.api_usage';
+    EXECUTE 'DROP POLICY IF EXISTS "api_usage_insert_own" ON public.api_usage';
+    EXECUTE $p$
+      CREATE POLICY "Users read own api_usage"
+        ON public.api_usage FOR SELECT TO authenticated
+        USING (auth.uid()::text = user_id::text)
+    $p$;
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.api_usage FROM PUBLIC, anon, authenticated';
+  END IF;
 
-DROP POLICY IF EXISTS "Users manage own api_keys" ON public.api_keys;
-CREATE POLICY "Users manage own api_keys"
-  ON public.api_keys FOR ALL TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  IF to_regclass('public.training_events') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.training_events ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON public.training_events FROM PUBLIC, anon, authenticated';
+  END IF;
 
-DROP POLICY IF EXISTS "Users manage own machines" ON public.machines;
-CREATE POLICY "Users manage own machines"
-  ON public.machines FOR ALL TO authenticated
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  IF to_regclass('public.waitlist') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "waitlist_select_own" ON public.waitlist';
+    EXECUTE $p$
+      CREATE POLICY "waitlist_select_own"
+        ON public.waitlist FOR SELECT TO authenticated
+        USING (lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))
+    $p$;
+  END IF;
+END $$;
 
-DROP POLICY IF EXISTS "Users read own token_usage" ON public.token_usage;
-CREATE POLICY "Users read own token_usage"
-  ON public.token_usage FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users read own api_usage" ON public.api_usage;
-CREATE POLICY "Users read own api_usage"
-  ON public.api_usage FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
-
--- Prevent direct tampering by anon/authenticated into ledger/training tables (only service_role writes via API)
-REVOKE INSERT, UPDATE, DELETE ON public.token_usage FROM anon, authenticated;
-REVOKE INSERT, UPDATE, DELETE ON public.api_usage FROM anon, authenticated;
-REVOKE ALL ON public.training_events FROM anon, authenticated;
-
--- 3. Restrict privileged SECURITY DEFINER RPC functions exclusively to service_role
+-- 3. Restrict privileged ledger/dataset/enumeration SECURITY DEFINER RPCs exclusively to service_role
+-- (Keep validate_api_key callable by hash for desktop sk-palama-... validation.)
 DO $$
 DECLARE
   fn_sig text;
@@ -70,8 +110,7 @@ BEGIN
         'has_token_migration',
         'ingest_training_event',
         'log_api_usage',
-        'user_exists',
-        'validate_api_key'
+        'user_exists'
       )
   LOOP
     EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated;', fn_sig);
