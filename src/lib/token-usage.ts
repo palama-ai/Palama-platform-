@@ -1,7 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
+import { getEffectiveWeeklyQuotaLimit, DEFAULT_WEEKLY_TOKEN_QUOTA } from "@/lib/desktop-config";
 
-/** Weekly token quota: 7,000,000 tokens per user, reset every Monday 00:00 UTC. */
-export const TOKEN_QUOTA_LIMIT = 7_000_000;
+/** Default weekly token quota: 2,000,000 tokens per user, reset every Monday 00:00 UTC. */
+export const TOKEN_QUOTA_LIMIT = DEFAULT_WEEKLY_TOKEN_QUOTA;
 
 function weekStartUTC(now = new Date()): Date {
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
@@ -75,11 +76,14 @@ export type QuotaStatus = {
 
 export async function getQuota(userId: string): Promise<QuotaStatus> {
   const { week_start, resets_at } = quotaPeriodUTC();
-  const used = await getWeeklyUsage(userId);
+  const [used, quotaLimit] = await Promise.all([
+    getWeeklyUsage(userId),
+    getEffectiveWeeklyQuotaLimit(),
+  ]);
   if (used === null) {
     // Fail closed: unverifiable usage blocks new work.
     return {
-      total_quota: TOKEN_QUOTA_LIMIT,
+      total_quota: quotaLimit,
       used_tokens: null,
       remaining_tokens: null,
       used_percent: null,
@@ -90,15 +94,15 @@ export async function getQuota(userId: string): Promise<QuotaStatus> {
       resets_at,
     };
   }
-  const remaining = Math.max(0, TOKEN_QUOTA_LIMIT - used);
-  const usedPct = Math.min(100, Math.round((used / TOKEN_QUOTA_LIMIT) * 100 * 100) / 100);
+  const remaining = Math.max(0, quotaLimit - used);
+  const usedPct = Math.min(100, Math.round((used / quotaLimit) * 100 * 100) / 100);
   return {
-    total_quota: TOKEN_QUOTA_LIMIT,
+    total_quota: quotaLimit,
     used_tokens: used,
     remaining_tokens: remaining,
     used_percent: usedPct,
     remaining_percent: Math.max(0, Math.round((100 - usedPct) * 100) / 100),
-    is_exceeded: used >= TOKEN_QUOTA_LIMIT,
+    is_exceeded: used >= quotaLimit,
     unknown: false,
     week_start,
     resets_at,

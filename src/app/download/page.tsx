@@ -76,6 +76,7 @@ export default function DownloadPage() {
 
       <section className="dl-hero">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+          <img src="/logo.png" alt="Palama Co-Worker" width={72} height={72} style={{ objectFit: "contain", margin: "0 auto 20px", display: "block" }} />
           <div className="dl-kicker">Download</div>
           <h1 className="dl-title">Palama Co-Worker</h1>
           <p className="dl-sub">Your AI desktop assistant. Available now for Windows — macOS is on the way.</p>

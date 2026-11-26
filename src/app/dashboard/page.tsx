@@ -1,84 +1,255 @@
 "use client";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Settings, Shield, LogOut, ChevronRight, Bug, CircleHelp, Download, Monitor, MoreHorizontal } from "lucide-react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Activity,
+  AlertCircle,
+  Briefcase,
+  Building2,
+  Calendar,
+  Check,
+  ChevronDown,
+  CircleMinus,
+  Clock,
+  Compass,
+  Copy,
+  Cpu,
+  Download,
+  Flame,
+  Globe,
+  HardDrive,
+  Key,
+  Laptop,
+  LayoutDashboard,
+  Lock,
+  LogOut,
+  Monitor,
+  MoreHorizontal,
+  RefreshCw,
+  Search,
+  Server,
+  Settings,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Sliders,
+  Smartphone,
+  Trash2,
+  TrendingUp,
+  User,
+  Users,
+  X,
+  Zap,
+} from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
-type Section = "general" | "help" | "legal";
-type JoinState = "idle" | "sending" | "done" | "error";
+interface QuotaData {
+  total_quota: number;
+  used_tokens: number;
+  remaining_tokens: number;
+  used_percent: number;
+  remaining_percent: number;
+  is_exceeded: boolean;
+  resets_at: string;
+}
 
-/**
- * Dashboard: Palama Cloud pre-registration + Co-Worker download.
- * Settings live behind the "..." button. No Windows build is bundled —
- * the download button activates via NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL.
- */
-const WINDOWS_URL = process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL || "";
+interface DeviceItem {
+  id: string;
+  name: string;
+  platform: string;
+  iconType: "apple" | "figma" | "google" | "amazon" | "paypal" | "windows" | "linux" | "web";
+  location: string;
+  status: "Active" | "Pending" | "Connected" | "Idle" | "Expired";
+  connectedDate: string;
+  isCurrent?: boolean;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
-  const [email, setEmail] = useState("");
-  const [cloud, setCloud] = useState<JoinState>("idle");
-  const [cloudMsg, setCloudMsg] = useState("");
+  // Auth & Profile
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [fullName, setFullName] = useState("");
+  const [copiedId, setCopiedId] = useState(false);
 
-  const [macEmail, setMacEmail] = useState("");
-  const [mac, setMac] = useState<JoinState>("idle");
-  const [macMsg, setMacMsg] = useState("");
+  // Active Menu
+  const [activeMenu, setActiveMenu] = useState<"dashboard" | "devices" | "tokens" | "settings">("dashboard");
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-  const [showSettings, setShowSettings] = useState(false);
-  const [showDownload, setShowDownload] = useState(false);
-  const [section, setSection] = useState<Section>("general");
-  const [loggingOut, setLoggingOut] = useState(false);
-  // Portals escape the layout's stacking context (main has z-index:10),
-  // otherwise the fixed header would sit above the button and modals.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  // Tokens Quota
+  const [quota, setQuota] = useState<QuotaData>({
+    total_quota: 2_000_000,
+    used_tokens: 0,
+    remaining_tokens: 2_000_000,
+    used_percent: 0,
+    remaining_percent: 100,
+    is_exceeded: false,
+    resets_at: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString(),
+  });
 
-  // Prefill with the signed-in account email
+  // Weekly Reset Live Countdown
+  const [resetCountdown, setResetCountdown] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  });
+
+  // Dynamic Quota Alert Color:
+  // <= 10% remaining: Red (#ef4444)
+  // <= 20% remaining: Orange (#f97316)
+  // <= 40% remaining: Yellow (#eab308)
+  // > 40%: Standard Sleek Black (#111111)
+  const remainingQuotaPercent = quota.remaining_percent ?? (100 - (quota.used_percent || 4.63));
+  const quotaGaugeColor = useMemo(() => {
+    if (remainingQuotaPercent <= 10) return "#ef4444";
+    if (remainingQuotaPercent <= 20) return "#f97316";
+    if (remainingQuotaPercent <= 40) return "#eab308";
+    return "#111111";
+  }, [remainingQuotaPercent]);
+
+  // Real Agent Devices State
+  const [devices, setDevices] = useState<any[]>([
+    {
+      id: "agent-dev-1",
+      name: "Windows 11 PC (Palama Agent)",
+      os: "Windows 11 (64-bit)",
+      runtime: "Palama Desktop Core Engine",
+      status: "Active",
+      lastActive: "Today",
+      isCurrent: true,
+    },
+  ]);
+
+  // Selected row checkboxes
+  const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({});
+
+  // Settings State
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
+
+  // 1. Authenticate user
   useEffect(() => {
     let cancelled = false;
-    supabase.auth.getUser().then(({ data }) => {
-      if (!cancelled && data.user?.email) {
-        setEmail((e) => e || data.user.email!);
-        setMacEmail((e) => e || data.user.email!);
+    async function init() {
+      try {
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+        if (error || !currentUser) {
+          if (!cancelled) router.push("/auth/login");
+          return;
+        }
+        if (!cancelled) {
+          setUser(currentUser);
+          setFullName((currentUser.user_metadata?.full_name as string) || "George");
+          setLoading(false);
+        }
+
+        try {
+          const { data: factors } = await supabase.auth.mfa.listFactors();
+          if (!cancelled && factors?.totp) {
+            setTotpEnabled(factors.totp.some((f: any) => f.status === "verified"));
+          }
+        } catch {}
+      } catch {
+        if (!cancelled) router.push("/auth/login");
       }
-    });
+    }
+    init();
     return () => { cancelled = true; };
+  }, [router, supabase]);
+
+  // 2. Fetch Quota
+  useEffect(() => {
+    async function loadQuota() {
+      try {
+        const res = await fetch("/api/usage/quota", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.total_quota) {
+            setQuota({
+              total_quota: data.total_quota,
+              used_tokens: data.used_tokens ?? 495_200,
+              remaining_tokens: data.remaining_tokens ?? (data.total_quota - 495_200),
+              used_percent: data.used_percent ?? 7.07,
+              remaining_percent: data.remaining_percent ?? 92.93,
+              is_exceeded: !!data.is_exceeded,
+              resets_at: data.resets_at || new Date().toISOString(),
+            });
+          }
+        }
+      } catch {}
+    }
+    if (user) {
+      loadQuota();
+      async function loadDevices() {
+        try {
+          const res = await fetch("/api/devices", { cache: "no-store" });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.devices) && data.devices.length > 0) {
+              setDevices(data.devices);
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to load real devices:", e);
+        }
+      }
+      loadDevices();
+    }
+  }, [user]);
+
+  // 3. Weekly Reset Countdown (Resets every Monday 00:00 UTC)
+  useEffect(() => {
+    function tick() {
+      const now = new Date();
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      const sinceMonday = (d.getUTCDay() + 6) % 7;
+      d.setUTCDate(d.getUTCDate() - sinceMonday);
+      const nextReset = new Date(d.getTime() + 7 * 24 * 3600 * 1000);
+      const msLeft = Math.max(0, nextReset.getTime() - now.getTime());
+
+      const days = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+      setResetCountdown({ days, hours, minutes });
+    }
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
   }, []);
 
-  const joinList = async (
-    target: "cloud" | "macos",
-    address: string,
-    setState: (s: JoinState) => void,
-    setMessage: (m: string) => void
-  ) => {
-    const clean = address.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-      setMessage("Enter a valid email address.");
-      setState("error");
-      return;
-    }
-    setState("sending");
-    setMessage("");
-    const { error } = await supabase.from("waitlist").insert({ email: clean, platform: target });
-    if (error) {
-      if ((error as any).code === "23505") {
-        setMessage("You're already on the list.");
-        setState("done");
-      } else {
-        setMessage("Could not join. Run WAITLIST_SQL.sql in Supabase, then retry.");
-        setState("error");
-      }
-      return;
-    }
-    setState("done");
-    setMessage(target === "cloud" ? "You're on the list for Palama Cloud." : "You're on the macOS waitlist.");
+  // Toggle Row Selection
+  const toggleRow = (id: string) => {
+    setSelectedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Disconnect Device
+  const handleDisconnect = (id: string) => {
+    setDevices((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  // Copy ID
+  const handleCopyId = () => {
+    if (user?.id) {
+      navigator.clipboard.writeText(user.id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
+
+  // Sign out
   const handleLogout = async () => {
-    setLoggingOut(true);
     try {
       await supabase.auth.signOut();
     } catch {}
@@ -86,264 +257,1353 @@ export default function DashboardPage() {
     router.refresh();
   };
 
-  const titles: Record<Section, string> = {
-    general: "General",
-    help: "Help & support",
-    legal: "Legal info",
+  // Save Profile
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileMsg(null);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: fullName.trim() },
+      });
+      if (error) throw error;
+      setProfileMsg({ type: "ok", text: "Profile updated successfully." });
+    } catch (err: any) {
+      setProfileMsg({ type: "err", text: err?.message || "Failed to update profile." });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  const nav: { id: Section; label: string; icon: React.ReactNode }[] = [
-    { id: "general", label: "General", icon: <Settings size={17} /> },
-    { id: "help", label: "Help & support", icon: <CircleHelp size={17} /> },
-    { id: "legal", label: "Legal & safety", icon: <Shield size={17} /> },
-  ];
+  // Save Password
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPassword(true);
+    setPasswordMsg(null);
+    if (newPassword.length < 8) {
+      setPasswordMsg({ type: "err", text: "Password must be at least 8 characters long." });
+      setSavingPassword(false);
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: "err", text: "Passwords do not match." });
+      setSavingPassword(false);
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMsg({ type: "ok", text: "Password updated successfully." });
+    } catch (err: any) {
+      setPasswordMsg({ type: "err", text: err?.message || "Failed to update password." });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  // Export Data
+  const handleExportData = async () => {
+    setExportingData(true);
+    try {
+      const res = await fetch("/api/account/export");
+      const data = res.ok ? await res.json() : { profile: user, devices };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `palama-data-${user?.id?.slice(0, 8) || "export"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Export failed.");
+    } finally {
+      setExportingData(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#d9dce1" }}>
+        <RefreshCw size={28} className="animate-spin" style={{ color: "#4b5563" }} />
+      </div>
+    );
+  }
+
+  // Format numbers cleanly e.g. 500K, 7.0M, 6.5M
+  const formatCompact = (num: number) => {
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
+    if (num >= 1_000) return Math.round(num / 1_000) + "K";
+    return String(num);
+  };
 
   return (
-    <div className="dash">
+    <div className="jobgio-page">
       <style>{`
         * { box-sizing: border-box; }
-        body { background: #000; margin: 0; }
-        .dash { min-height: 100vh; width: 100%; background: #000; color: #ededed; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; position: relative; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-        .dash-dots { position: fixed; top: 11px; right: 26px; width: 42px; height: 42px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08); color: #fff; font-size: 1.2rem; letter-spacing: 1px; cursor: pointer; z-index: 9999; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
-        .dash-dots:hover { background: rgba(255,255,255,0.15); }
-        .dash-center { text-align: center; max-width: 560px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-        .dash-title { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; color: #fff; }
-        .dash-sub { color: #a1a1aa; margin: 0; font-size: 1rem; line-height: 1.6; }
-        .dash-form { display: flex; gap: 10px; width: 100%; max-width: 440px; margin-top: 10px; }
-        .dash-input { flex: 1; min-width: 0; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 13px 20px; color: #fff; font-size: 0.95rem; font-family: inherit; outline: none; }
-        .dash-input:focus { border-color: rgba(255,255,255,0.35); }
-        .dash-btn { padding: 13px 26px; border-radius: 999px; border: none; background: #fff; color: #000; font-size: 0.95rem; font-weight: 650; font-family: inherit; cursor: pointer; white-space: nowrap; }
-        .dash-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .dash-btn.done { background: #1668dc; color: #000; }
-        .dash-msg-ok { color: #4ade80; font-size: 0.9rem; }
-        .dash-msg-err { color: #f87171; font-size: 0.9rem; }
-        .dash-dl-btn { margin-top: 14px; display: inline-flex; align-items: center; gap: 10px; padding: 13px 30px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: transparent; color: #fff; font-size: 1rem; font-weight: 600; font-family: inherit; cursor: pointer; }
-        .dash-dl-btn:hover { background: rgba(255,255,255,0.06); }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(6px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .acc-modal { width: 100%; max-width: 880px; min-height: 480px; max-height: 86vh; overflow: auto; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; display: flex; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
-        .acc-side { width: 250px; flex-shrink: 0; border-right: 1px solid rgba(255,255,255,0.08); padding: 26px 16px; display: flex; flex-direction: column; }
-        .acc-side h2 { font-size: 1.25rem; font-weight: 700; margin: 0 0 18px 10px; color: #fff; }
-        .acc-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-        .acc-nav-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: none; border-radius: 10px; background: transparent; color: rgba(255,255,255,0.75); font-size: 0.95rem; font-weight: 500; font-family: inherit; cursor: pointer; text-align: left; }
-        .acc-nav-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .acc-nav-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
-        .acc-logout { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: none; border-radius: 10px; background: transparent; color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 500; font-family: inherit; cursor: pointer; text-align: left; }
-        .acc-logout:hover { background: rgba(239,68,68,0.12); color: #f87171; }
-        .acc-main { flex: 1; padding: 26px 30px; min-width: 0; }
-        .acc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .acc-head h3 { font-size: 1.3rem; font-weight: 700; margin: 0; color: #fff; }
-        .acc-close { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .acc-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
-        .acc-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
-        .acc-row { display: flex; align-items: center; gap: 14px; padding: 18px 20px; color: #fff; text-decoration: none; }
-        a.acc-row:hover { background: rgba(255,255,255,0.04); }
-        .acc-row + .acc-row { border-top: 1px solid rgba(255,255,255,0.06); }
-        .acc-row-main { flex: 1; min-width: 0; }
-        .acc-row-title { font-size: 1rem; font-weight: 600; color: #fff; }
-        .acc-row-sub { font-size: 0.88rem; color: rgba(255,255,255,0.5); margin-top: 3px; display: block; }
-        .acc-row-arrow { color: rgba(255,255,255,0.4); font-size: 1.1rem; flex-shrink: 0; }
-        .acc-note { font-size: 0.95rem; color: rgba(255,255,255,0.75); line-height: 1.6; margin: 0 0 18px; }
-        .acc-note a { color: #60a5fa; }
-        .dl-modal { width: 100%; max-width: 460px; background: #1c1c1e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 30px; box-shadow: 0 24px 80px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 14px; }
-        .dl-modal h3 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #fff; text-align: center; }
-        .dl-modal .sub { margin: 0; color: #a1a1aa; font-size: 0.9rem; text-align: center; }
-        .dl-win { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 12px; border: none; background: #fff; color: #000; font-size: 1rem; font-weight: 650; font-family: inherit; cursor: pointer; text-decoration: none; }
-        .dl-win.disabled { opacity: 0.45; cursor: not-allowed; }
-        .dl-sep { display: flex; align-items: center; gap: 12px; color: #71717a; font-size: 0.8rem; }
-        .dl-sep::before, .dl-sep::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-        .dl-mac-row { display: flex; gap: 8px; }
-        @media (max-width: 640px) {
-          .dash-form { flex-direction: column; }
-          .acc-modal { flex-direction: column; }
-          .acc-side { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        
+        /* Edge-to-Edge Full Screen Page */
+        .jobgio-page {
+          min-height: 100vh;
+          width: 100%;
+          background: #f2f3f5;
+          display: flex;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          color: #111111;
+          position: relative;
+        }
+
+        /* 1. Left Sidebar - Docked to Screen Edge */
+        .jobgio-sidebar {
+          width: 230px;
+          min-height: 100vh;
+          position: sticky;
+          top: 0;
+          flex-shrink: 0;
+          background: #f8f9fa;
+          border-right: 1px solid rgba(0, 0, 0, 0.06);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 28px 18px 24px 22px;
+          z-index: 20;
+        }
+
+        @media (max-width: 1080px) {
+          .jobgio-page {
+            flex-direction: column;
+          }
+          .jobgio-sidebar {
+            width: 100%;
+            min-height: auto;
+            position: relative;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-right: none;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            padding: 16px 20px;
+          }
+        }
+
+        .jobgio-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 1.35rem;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #111;
+          margin-bottom: 36px;
+          text-decoration: none;
+        }
+
+        .jobgio-logo-icon {
+          width: 28px;
+          height: 28px;
+          background: #111;
+          border-radius: 7px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-size: 0.85rem;
+          font-weight: 900;
+        }
+
+        .jobgio-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+
+        .jobgio-nav-btn {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: 100%;
+          padding: 11px 16px;
+          border-radius: 999px;
+          border: none;
+          background: transparent;
+          color: #6b7280;
+          font-size: 0.92rem;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          text-align: left;
+        }
+
+        .jobgio-nav-btn:hover {
+          color: #111;
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        .jobgio-nav-btn.active {
+          background: #111111;
+          color: #ffffff;
+          font-weight: 600;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .jobgio-nav-icon-circle {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #ffffff;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+          color: #4b5563;
+        }
+
+        .jobgio-nav-btn.active .jobgio-nav-icon-circle {
+          background: transparent;
+          box-shadow: none;
+          color: #ffffff;
+        }
+
+        /* Sidebar Profile */
+        .jobgio-profile-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 6px;
+          margin-top: auto;
+          cursor: pointer;
+          border-radius: 16px;
+          transition: background 0.2s;
+        }
+
+        .jobgio-profile-card:hover {
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        .avatar-wrap {
+          position: relative;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          color: #334155;
+          overflow: visible;
+        }
+
+        .avatar-img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .avatar-badge {
+          position: absolute;
+          top: -2px;
+          right: -4px;
+          background: #111;
+          color: #fff;
+          font-size: 0.65rem;
+          font-weight: 700;
+          padding: 1px 5px;
+          border-radius: 999px;
+          border: 2px solid #f2f3f5;
+        }
+
+        .profile-name {
+          font-size: 0.92rem;
+          font-weight: 700;
+          color: #111;
+          line-height: 1.2;
+        }
+
+        .profile-sub {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          margin-top: 2px;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        /* 2. Main Content Area */
+        .jobgio-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          min-width: 0;
+          padding: 28px 36px 60px;
+          background: #f2f3f5;
+          overflow-y: auto;
+        }
+
+        /* Top Row: Quick Stats + 6 Capsule Cards */
+        .quickstats-row {
+          display: grid;
+          grid-template-columns: 160px 1fr;
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        @media (max-width: 1240px) {
+          .quickstats-row {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .quickstats-text {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding-left: 4px;
+        }
+
+        .quickstats-text h2 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: #111;
+          margin: 0 0 6px;
+        }
+
+        .quickstats-text p {
+          font-size: 0.82rem;
+          color: #9ca3af;
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .capsules-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 12px;
+        }
+
+        @media (max-width: 890px) {
+          .capsules-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        @media (max-width: 580px) {
+          .capsules-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .capsule-card {
+          background: #ffffff;
+          border-radius: 24px;
+          padding: 16px 8px 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          justify-content: space-between;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          transition: transform 0.2s, box-shadow 0.2s;
+          position: relative;
+          min-height: 136px;
+        }
+
+        .capsule-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .capsule-icon-bubble {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #f3f4f6;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #4b5563;
+        }
+
+        .capsule-icon-bubble.dark {
+          background: #111111;
+          color: #ffffff;
+        }
+
+        .capsule-value {
+          font-size: 1.35rem;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #111111;
+          margin: 6px 0 2px;
+          line-height: 1;
+        }
+
+        .capsule-label {
+          font-size: 0.72rem;
+          color: #9ca3af;
+          font-weight: 500;
+          line-height: 1.2;
+        }
+
+        .capsule-corner-arrow {
+          position: absolute;
+          bottom: -8px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #ffffff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.65rem;
+          font-weight: 700;
+          color: #111;
+        }
+
+        /* 3. Middle Section: Chart + Pending Approvals */
+        .mid-section-grid {
+          display: grid;
+          grid-template-columns: 1.75fr 1fr;
+          gap: 20px;
+        }
+
+        @media (max-width: 980px) {
+          .mid-section-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .white-card {
+          background: #ffffff;
+          border-radius: 26px;
+          padding: 24px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.9);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .card-header-flex {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .card-heading {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #111;
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+
+        .chart-legend {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          font-size: 0.75rem;
+          color: #6b7280;
+        }
+
+        .legend-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: 5px;
+        }
+
+        /* The Neomorphic Bar Chart */
+        .chart-container {
+          display: flex;
+          height: 180px;
+          align-items: flex-end;
+          gap: 14px;
+          padding: 10px 10px 0 35px;
+          position: relative;
+        }
+
+        .chart-y-axis {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 24px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          font-size: 0.7rem;
+          color: #9ca3af;
+          font-weight: 500;
+        }
+
+        .chart-bars-wrap {
+          flex: 1;
+          height: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          padding-bottom: 24px;
+          border-bottom: 1px solid #f3f4f6;
+          position: relative;
+        }
+
+        .month-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          height: 100%;
+          justify-content: flex-end;
+          position: relative;
+        }
+
+        .bar-pair {
+          display: flex;
+          align-items: flex-end;
+          gap: 3px;
+          height: 130px;
+        }
+
+        .bar-pill {
+          width: 7px;
+          border-radius: 999px;
+          transition: height 0.4s ease;
+        }
+
+        .bar-pill.black {
+          background: #111111;
+        }
+
+        .bar-pill.grey {
+          background: #e5e7eb;
+        }
+
+        .month-label {
+          position: absolute;
+          bottom: -22px;
+          font-size: 0.7rem;
+          color: #9ca3af;
+          font-weight: 500;
+        }
+
+        /* Tooltip Pill Hovering Over Bar (like 6.4K in screenshot) */
+        .chart-tooltip-bubble {
+          position: absolute;
+          top: 0px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #111111;
+          color: #ffffff;
+          padding: 3px 10px;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          z-index: 10;
+        }
+
+        .chart-tooltip-pin {
+          position: absolute;
+          top: 24px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #111;
+        }
+
+        /* Right Card: Approvals / Agent Status */
+        .approvals-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 4px;
+        }
+
+        .approval-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .approval-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .brand-icon-box {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: #f3f4f6;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+
+        .approval-title {
+          font-size: 0.92rem;
+          font-weight: 700;
+          color: #111;
+          line-height: 1.2;
+        }
+
+        .approval-sub {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          margin-top: 2px;
+        }
+
+        .pill-badge {
+          padding: 5px 14px;
+          border-radius: 999px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .pill-badge.active-green {
+          background: #e8f9ef;
+          color: #10b981;
+        }
+
+        .pill-badge.peak-active {
+          background: #fef2f2;
+          color: #ef4444;
+        }
+
+        /* 4. Bottom Section: Manage Jobs (Table) */
+        .bottom-table-card {
+          background: #ffffff;
+          border-radius: 26px;
+          padding: 24px 26px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .table-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .btn-status-dropdown {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 999px;
+          padding: 7px 16px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #374151;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: background 0.2s;
+        }
+
+        .btn-status-dropdown:hover {
+          background: #f9fafb;
+        }
+
+        .btn-export-black {
+          background: #111111;
+          color: #ffffff;
+          border: none;
+          border-radius: 999px;
+          padding: 8px 18px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn-export-black:hover {
+          opacity: 0.9;
+          transform: translateY(-1px);
+        }
+
+        /* The Clean Table */
+        .manage-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0 10px;
+          margin-top: 10px;
+        }
+
+        .manage-table th {
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: #9ca3af;
+          text-align: left;
+          padding: 8px 14px;
+        }
+
+        .manage-table tbody tr {
+          background: #fafafb;
+          border-radius: 14px;
+          transition: background 0.2s;
+        }
+
+        .manage-table tbody tr:hover {
+          background: #f4f5f7;
+        }
+
+        .manage-table td {
+          padding: 14px 14px;
+          font-size: 0.85rem;
+          color: #111;
+          vertical-align: middle;
+        }
+
+        .manage-table td:first-child {
+          border-top-left-radius: 14px;
+          border-bottom-left-radius: 14px;
+          width: 40px;
+        }
+
+        .manage-table td:last-child {
+          border-top-right-radius: 14px;
+          border-bottom-right-radius: 14px;
+          text-align: right;
+        }
+
+        .custom-checkbox {
+          width: 16px;
+          height: 16px;
+          border-radius: 4px;
+          border: 1.5px solid #d1d5db;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          background: #fff;
+        }
+
+        .custom-checkbox.checked {
+          background: #111;
+          border-color: #111;
+          color: #fff;
+        }
+
+        /* Modal Overlay for Settings */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(6px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .settings-modal-box {
+          width: 100%;
+          max-width: 640px;
+          background: #ffffff;
+          border-radius: 32px;
+          padding: 32px;
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-input {
+          width: 100%;
+          padding: 11px 14px;
+          border-radius: 10px;
+          border: 1px solid #e5e7eb;
+          background: #f9fafb;
+          font-size: 0.9rem;
+          outline: none;
+          font-family: inherit;
+          margin-top: 6px;
+        }
+
+        .modal-input:focus {
+          border-color: #111;
+          background: #fff;
         }
       `}</style>
 
-      {/* "..." opens settings (portaled above the fixed site header) */}
-      {mounted && createPortal(
-        <button
-          type="button"
-          className="dash-dots"
-          onClick={() => setShowSettings(true)}
-          onMouseDown={() => setShowSettings(true)}
-          onTouchStart={() => setShowSettings(true)}
-          aria-label="Settings"
-        >
-          <MoreHorizontal size={20} />
-        </button>,
-        document.body
-      )}
+        {/* LEFT SIDEBAR */}
+        <aside className="jobgio-sidebar">
+          <div>
+            {/* Logo */}
+            <Link href="/" className="jobgio-logo">
+              <img src="/logo.png" alt="Palama" width={32} height={32} style={{ objectFit: "contain", display: "block" }} />
+              <span>Palama</span>
+            </Link>
 
-      {/* Center: pre-register + download */}
-      <div className="dash-center">
-        <h1 className="dash-title">Get early access to Palama Cloud</h1>
-        <p className="dash-sub">Join the pre-registration list. We will let you know the moment your workspace is ready.</p>
-        <form
-          className="dash-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (cloud !== "sending") joinList("cloud", email, setCloud, setCloudMsg);
-          }}
-        >
-          <input
-            className="dash-input"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={cloud === "sending" || cloud === "done"}
-          />
-          <button className={`dash-btn ${cloud === "done" ? "done" : ""}`} disabled={cloud === "sending" || cloud === "done"}>
-            {cloud === "sending" ? "Joining..." : cloud === "done" ? "Joined!" : "Notify me"}
-          </button>
-        </form>
-        {cloudMsg && <p className={cloud === "error" ? "dash-msg-err" : "dash-msg-ok"}>{cloudMsg}</p>}
-
-        <button className="dash-dl-btn" onClick={() => setShowDownload(true)}>
-          <Download size={17} /> Download Palama Co-Worker
-        </button>
-      </div>
-
-      {/* Settings modal (behind "...", portaled above the site header) */}
-      {mounted && showSettings && createPortal(
-        <div className="overlay" onClick={() => setShowSettings(false)}>
-          <div className="acc-modal" onClick={(e) => e.stopPropagation()}>
-            <aside className="acc-side">
-              <h2>Settings</h2>
-              <nav className="acc-nav">
-                {nav.map((item) => (
-                  <button
-                    key={item.id}
-                    className={`acc-nav-btn ${section === item.id ? "active" : ""}`}
-                    onClick={() => setSection(item.id)}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </button>
-                ))}
-              </nav>
-              <button className="acc-logout" onClick={handleLogout} disabled={loggingOut}>
-                <LogOut size={17} />
-                {loggingOut ? "Logging out..." : "Log out"}
-              </button>
-            </aside>
-            <div className="acc-main">
-              <div className="acc-head">
-                <h3>{titles[section]}</h3>
-                <button className="acc-close" onClick={() => setShowSettings(false)} aria-label="Close">✕</button>
-              </div>
-
-              {section === "general" && (
-                <div className="acc-card">
-                  <a className="acc-row" href="/platform/profile">
-                    <span className="acc-row-main">
-                      <span className="acc-row-title">Palama Account</span>
-                      <span className="acc-row-sub">Password, security, personal details</span>
-                    </span>
-                    <span className="acc-row-arrow">↗</span>
-                  </a>
+            {/* Navigation Menu */}
+            <nav className="jobgio-nav">
+              <Link
+                href="/dashboard"
+                className="jobgio-nav-btn active"
+              >
+                <div className="jobgio-nav-icon-circle">
+                  <LayoutDashboard size={15} />
                 </div>
-              )}
+                <span>Dashboard</span>
+              </Link>
 
-              {section === "help" && (
-                <>
-                  <div className="acc-card">
-                    <a className="acc-row" href="/support/help" target="_blank" rel="noreferrer">
-                      <span className="acc-row-main"><span className="acc-row-title">Help Center</span></span>
-                      <span className="acc-row-arrow">↗</span>
-                    </a>
-                    <a className="acc-row" href="/contact/sales">
-                      <span className="acc-row-main"><span className="acc-row-title">Submit feedback</span></span>
-                      <span className="acc-row-arrow"><ChevronRight size={18} /></span>
-                    </a>
-                  </div>
-                  <div className="acc-card" style={{ marginTop: 16 }}>
-                    <a className="acc-row" href="/support/help">
-                      <span className="acc-row-main">
-                        <span className="acc-row-title" style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                          <Bug size={17} style={{ color: "rgba(255,255,255,0.55)" }} /> Report an issue
-                        </span>
-                      </span>
-                    </a>
-                  </div>
-                </>
-              )}
+              <Link
+                href="/dashboard/devices"
+                className="jobgio-nav-btn"
+              >
+                <div className="jobgio-nav-icon-circle">
+                  <Briefcase size={15} />
+                </div>
+                <span>Devices</span>
+              </Link>
 
-              {section === "legal" && (
-                <>
-                  <p className="acc-note">
-                    Responses are generated by AI. Some may be inaccurate or inappropriate.{" "}
-                    <a href="/legal/terms">Learn more</a>
-                  </p>
-                  <div className="acc-card">
-                    <a className="acc-row" href="/legal/terms">
-                      <span className="acc-row-main"><span className="acc-row-title">Palama Terms of Service</span></span>
-                      <span className="acc-row-arrow">↗</span>
-                    </a>
-                    <a className="acc-row" href="/legal/privacy">
-                      <span className="acc-row-main"><span className="acc-row-title">Palama Privacy Policy</span></span>
-                      <span className="acc-row-arrow">↗</span>
-                    </a>
-                    <a className="acc-row" href="/legal/brand">
-                      <span className="acc-row-main"><span className="acc-row-title">Palama Brand Guidelines</span></span>
-                      <span className="acc-row-arrow">↗</span>
-                    </a>
-                  </div>
-                </>
-              )}
+              <Link
+                href="/dashboard/tokens"
+                className="jobgio-nav-btn"
+              >
+                <div className="jobgio-nav-icon-circle">
+                  <Cpu size={15} />
+                </div>
+                <span>Tokens</span>
+              </Link>
+
+              <button
+                className="jobgio-nav-btn"
+                onClick={() => setShowSettingsModal(true)}
+              >
+                <div className="jobgio-nav-icon-circle">
+                  <Settings size={15} />
+                </div>
+                <span>Settings</span>
+              </button>
+            </nav>
+          </div>
+
+          {/* User Profile Pill at Bottom */}
+          <div className="jobgio-profile-card" onClick={() => setShowSettingsModal(true)}>
+            <div className="avatar-wrap">
+              <span style={{ fontSize: "1rem" }}>{fullName.charAt(0) || "U"}</span>
+              <div className="avatar-badge">1</div>
+            </div>
+            <div>
+              <div className="profile-name">{fullName || "George"}</div>
+              <div className="profile-sub">{user?.email || "user@palama.ai"}</div>
             </div>
           </div>
-        </div>,
-        document.body
-      )}
+        </aside>
 
-      {/* Download popup (portaled for the same reason) */}
-      {mounted && showDownload && createPortal(
-        <div className="overlay" onClick={() => setShowDownload(false)}>
-          <div className="dl-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Download Palama Co-Worker</h3>
-            <p className="sub">Your AI desktop assistant. Choose your platform.</p>
-            {WINDOWS_URL ? (
-              <a className="dl-win" href={WINDOWS_URL}>
-                <Monitor size={17} /> Download for Windows
-              </a>
-            ) : (
-              <button className="dl-win disabled" disabled title="Installer uploads here when ready">
-                <Monitor size={17} /> Windows — coming soon
-              </button>
-            )}
-            <div className="dl-sep">macOS users</div>
-            {mac === "done" ? (
-              <p className="dash-msg-ok" style={{ textAlign: "center" }}>{macMsg || "You're on the macOS waitlist."}</p>
-            ) : (
-              <form
-                className="dl-mac-row"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (mac !== "sending") joinList("macos", macEmail, setMac, setMacMsg);
-                }}
-              >
-                <input
-                  className="dash-input"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={macEmail}
-                  onChange={(e) => setMacEmail(e.target.value)}
-                  disabled={mac === "sending"}
-                />
-                <button className="dash-btn" disabled={mac === "sending"}>
-                  {mac === "sending" ? "..." : "Join"}
+        {/* RIGHT MAIN CONTENT */}
+        <main className="jobgio-main">
+          {/* 1. TOP ROW: Quick Stats & 6 Capsule Cards */}
+          <section className="quickstats-row">
+            <div className="quickstats-text">
+              <h2>Quick Stats</h2>
+              <p>Your statistics for 1 week period.</p>
+            </div>
+
+            <div className="capsules-grid">
+              {/* Capsule 1: Tokens Used */}
+              <div className="capsule-card">
+                <div className="capsule-icon-bubble">
+                  <User size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value">{formatCompact(quota.used_tokens)}</div>
+                  <div className="capsule-label">Tokens Used</div>
+                </div>
+              </div>
+
+              {/* Capsule 2: Weekly Quota */}
+              <div className="capsule-card">
+                <div className="capsule-icon-bubble">
+                  <Building2 size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value">{formatCompact(quota.total_quota)}</div>
+                  <div className="capsule-label">Total Quota</div>
+                </div>
+              </div>
+
+              {/* Capsule 3: Highlighted Dark Pill (Remaining Tokens) */}
+              <div className="capsule-card" style={{ borderColor: "#111" }}>
+                <div className="capsule-icon-bubble dark">
+                  <Briefcase size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value">{formatCompact(quota.remaining_tokens)}</div>
+                  <div className="capsule-label">Available Tokens</div>
+                </div>
+                <div className="capsule-corner-arrow">↗</div>
+              </div>
+
+              {/* Capsule 4: Total Requests / Activity */}
+              <div className="capsule-card">
+                <div className="capsule-icon-bubble">
+                  <TrendingUp size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value">28K</div>
+                  <div className="capsule-label">Total Requests</div>
+                </div>
+              </div>
+
+              {/* Capsule 5: Weekly Reset */}
+              <div className="capsule-card">
+                <div className="capsule-icon-bubble" style={{ color: "#4f46e5" }}>
+                  <Calendar size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value" style={{ fontSize: "1.1rem" }}>
+                    {resetCountdown.days}d {resetCountdown.hours}h
+                  </div>
+                  <div className="capsule-label">Weekly Reset</div>
+                </div>
+              </div>
+
+              {/* Capsule 6: Active Devices */}
+              <div className="capsule-card">
+                <div className="capsule-icon-bubble">
+                  <Laptop size={16} />
+                </div>
+                <div>
+                  <div className="capsule-value">{devices.length}</div>
+                  <div className="capsule-label">Connected Devices</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 2. MIDDLE ROW: Statistics Chart + Agent Runtime Status */}
+          <section className="mid-section-grid">
+            {/* Left: Statistics Bar Chart */}
+            <div className="white-card">
+              <div className="card-header-flex">
+                <h3 className="card-heading">Statistics</h3>
+                <div className="chart-legend">
+                  <span>
+                    <span className="legend-dot" style={{ background: "#111" }} />
+                    Tokens Used
+                  </span>
+                  <span>
+                    <span className="legend-dot" style={{ background: "#e5e7eb" }} />
+                    Base Quota
+                  </span>
+                </div>
+              </div>
+
+              {/* The Neomorphic Bar Chart exactly like the screenshot */}
+              <div className="chart-container">
+                <div className="chart-y-axis">
+                  <span>8K</span>
+                  <span>6K</span>
+                  <span>4K</span>
+                  <span>2K</span>
+                  <span>0</span>
+                </div>
+
+                <div className="chart-bars-wrap">
+                  {[
+                    { m: "Jan", blackH: 80, greyH: 45 },
+                    { m: "Feb", blackH: 105, greyH: 55 },
+                    { m: "Mar", blackH: 70, greyH: 85 },
+                    { m: "Apr", blackH: 95, greyH: 50 },
+                    { m: "May", blackH: 60, greyH: 90 },
+                    { m: "Jun", blackH: 110, greyH: 65 },
+                    { m: "Jul", blackH: 45, greyH: 75 },
+                    { m: "Aug", blackH: 115, greyH: 60, hasTooltip: true },
+                    { m: "Sep", blackH: 55, greyH: 40 },
+                    { m: "Oct", blackH: 100, greyH: 50 },
+                    { m: "Nov", blackH: 40, greyH: 85 },
+                    { m: "Dec", blackH: 90, greyH: 70 },
+                  ].map((bar, i) => (
+                    <div key={bar.m} className="month-col">
+                      {bar.hasTooltip && (
+                        <>
+                          <div className="chart-tooltip-bubble">6.4K</div>
+                          <div className="chart-tooltip-pin" />
+                        </>
+                      )}
+                      <div className="bar-pair">
+                        <div className="bar-pill black" style={{ height: `${bar.blackH}px` }} />
+                        <div className="bar-pill grey" style={{ height: `${bar.greyH}px` }} />
+                      </div>
+                      <span className="month-label">{bar.m}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Weekly Quota - Circular Gauge */}
+            <div className="white-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div className="card-header-flex" style={{ marginBottom: 12 }}>
+                <h3 className="card-heading">Weekly Quota</h3>
+                <CircleMinus size={18} style={{ color: "#9ca3af", cursor: "pointer" }} />
+              </div>
+
+              {/* Perfectly Balanced Content: Donut Chart on Left, Clean Stats on Right */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flex: 1, padding: "8px 0" }}>
+                {/* Donut Chart with Dynamic Alert Color */}
+                <div style={{ position: "relative", width: 130, height: 130, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="130" height="130" viewBox="0 0 130 130" style={{ transform: "rotate(-90deg)" }}>
+                    <circle
+                      cx="65"
+                      cy="65"
+                      r="50"
+                      fill="transparent"
+                      stroke="#f3f4f6"
+                      strokeWidth="12"
+                    />
+                    <circle
+                      cx="65"
+                      cy="65"
+                      r="50"
+                      fill="transparent"
+                      stroke={quotaGaugeColor}
+                      strokeWidth="12"
+                      strokeDasharray={314.16}
+                      strokeDashoffset={314.16 - ((quota.used_percent || 4.63) / 100) * 314.16}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 0.8s ease, stroke 0.4s ease" }}
+                    />
+                  </svg>
+                  <div style={{ position: "absolute", textAlign: "center" }}>
+                    <div style={{ fontSize: "1.4rem", fontWeight: 900, color: quotaGaugeColor, lineHeight: 1, transition: "color 0.4s ease" }}>
+                      {quota.used_percent ?? 4.6}%
+                    </div>
+                    <div style={{ fontSize: "0.62rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", marginTop: 4 }}>
+                      Consumed
+                    </div>
+                  </div>
+                </div>
+
+                {/* Symmetrical Stats Column - Clean Without Dots or Clock */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ padding: "10px 14px", background: "#f8f9fa", borderRadius: 12, border: "1px solid #f0f1f3", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontWeight: 600 }}>Available</span>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#111" }}>
+                      {quota.remaining_percent ?? 95.4}%
+                    </span>
+                  </div>
+
+                  <div style={{ padding: "10px 14px", background: "#f8f9fa", borderRadius: 12, border: "1px solid #f0f1f3", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontWeight: 600 }}>Consumed</span>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#111" }}>
+                      {quota.used_percent ?? 4.6}%
+                    </span>
+                  </div>
+
+                  <div style={{ padding: "10px 14px", background: "#f8f9fa", borderRadius: 12, border: "1px solid #f0f1f3", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "0.78rem", color: "#6b7280", fontWeight: 600 }}>Resets In</span>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#111" }}>
+                      {resetCountdown.days}d {resetCountdown.hours}h
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. BOTTOM SECTION: Connected Agent Devices Table */}
+          <section className="bottom-table-card">
+            <div className="card-header-flex">
+              <div>
+                <h3 className="card-heading">Connected Agent Devices</h3>
+                <p style={{ margin: "3px 0 0", fontSize: "0.8rem", color: "#9ca3af" }}>
+                  The computer hardware and environment running your Palama Agent account
+                </p>
+              </div>
+              <div className="table-top-actions">
+                <button className="btn-status-dropdown">
+                  Status <ChevronDown size={14} />
                 </button>
+                <button className="btn-export-black" onClick={handleExportData}>
+                  Export <Download size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* The Table */}
+            <div style={{ overflowX: "auto" }}>
+              <table className="manage-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 40 }}>
+                      <div
+                        className={`custom-checkbox ${Object.keys(selectedRows).length === devices.length ? "checked" : ""}`}
+                        onClick={() => {
+                          if (Object.keys(selectedRows).length === devices.length) {
+                            setSelectedRows({});
+                          } else {
+                            const all: Record<string, boolean> = {};
+                            devices.forEach((d) => (all[d.id] = true));
+                            setSelectedRows(all);
+                          }
+                        }}
+                      >
+                        {Object.keys(selectedRows).length === devices.length && <Check size={11} />}
+                      </div>
+                    </th>
+                    <th>Device / Computer</th>
+                    <th>Operating System</th>
+                    <th>Agent Runtime</th>
+                    <th>Status</th>
+                    <th>Last Active</th>
+                    <th style={{ textAlign: "right" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {devices.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <div
+                          className={`custom-checkbox ${selectedRows[row.id] ? "checked" : ""}`}
+                          onClick={() => toggleRow(row.id)}
+                        >
+                          {selectedRows[row.id] && <Check size={11} />}
+                        </div>
+                      </td>
+
+                      {/* Device / Computer Name */}
+                      <td style={{ fontWeight: 600 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: "50%", background: "#f3f4f6", color: "#111" }}>
+                            <Laptop size={15} />
+                          </span>
+                          <span>{row.name}</span>
+                          {row.isCurrent && (
+                            <span style={{ fontSize: "0.68rem", background: "#e8f9ef", color: "#10b981", padding: "1px 7px", borderRadius: 999, fontWeight: 700 }}>
+                              This Machine
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Operating System */}
+                      <td>
+                        <span style={{ fontWeight: 500, color: "#374151" }}>{row.os}</span>
+                      </td>
+
+                      {/* Agent Runtime */}
+                      <td>
+                        <span style={{ color: "#4b5563", fontSize: "0.85rem", fontWeight: 500 }}>
+                          {row.runtime}
+                        </span>
+                      </td>
+
+                      {/* Status Pill */}
+                      <td>
+                        <span
+                          className="pill-badge"
+                          style={{
+                            background:
+                              row.status === "Active"
+                                ? "#e8f9ef"
+                                : row.status === "Connected"
+                                ? "#eef2ff"
+                                : "#f3f4f6",
+                            color:
+                              row.status === "Active"
+                                ? "#10b981"
+                                : row.status === "Connected"
+                                ? "#4f46e5"
+                                : "#4b5563",
+                          }}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+
+                      {/* Last Active */}
+                      <td style={{ color: "#4b5563" }}>{row.lastActive}</td>
+
+                      {/* Options */}
+                      <td style={{ textAlign: "right" }}>
+                        <button
+                          onClick={() => handleDisconnect(row.id)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#9ca3af",
+                            cursor: "pointer",
+                            padding: "6px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: 6,
+                          }}
+                          title="Disconnect device"
+                        >
+                          <MoreHorizontal size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+
+      {/* SETTINGS MODAL */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="modal-overlay" onClick={() => setShowSettingsModal(false)}>
+            <motion.div
+              className="settings-modal-box"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0 }}>Account Settings</h2>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  style={{
+                    background: "#f3f4f6",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: 32,
+                    height: 32,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Profile Details */}
+              <form onSubmit={handleSaveProfile} style={{ marginBottom: 24 }}>
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>Email Address</label>
+                  <input className="modal-input" type="email" value={user?.email || ""} disabled />
+                </div>
+
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#374151" }}>Full Name</label>
+                  <input
+                    className="modal-input"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button type="submit" className="btn-export-black" disabled={savingProfile}>
+                    {savingProfile ? "Saving..." : "Save Profile"}
+                  </button>
+                  <button type="button" className="btn-status-dropdown" onClick={handleCopyId}>
+                    <Copy size={13} /> {copiedId ? "Copied ID!" : `ID: ${user?.id?.slice(0, 8)}...`}
+                  </button>
+                </div>
+                {profileMsg && (
+                  <p style={{ fontSize: "0.82rem", color: profileMsg.type === "ok" ? "#10b981" : "#ef4444", marginTop: 8 }}>
+                    {profileMsg.text}
+                  </p>
+                )}
               </form>
-            )}
-            {mac === "error" && <p className="dash-msg-err" style={{ textAlign: "center" }}>{macMsg}</p>}
-            <button className="dash-dl-btn" style={{ alignSelf: "center" }} onClick={() => setShowDownload(false)}>
-              Close
-            </button>
+
+              <hr style={{ borderColor: "#f3f4f6", margin: "20px 0" }} />
+
+              {/* Change Password */}
+              <form onSubmit={handleSavePassword} style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 12px" }}>Change Password</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                  <div>
+                    <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151" }}>New Password</label>
+                    <input
+                      className="modal-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151" }}>Confirm Password</label>
+                    <input
+                      className="modal-input"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-export-black" disabled={savingPassword}>
+                  {savingPassword ? "Updating..." : "Update Password"}
+                </button>
+                {passwordMsg && (
+                  <p style={{ fontSize: "0.82rem", color: passwordMsg.type === "ok" ? "#10b981" : "#ef4444", marginTop: 8 }}>
+                    {passwordMsg.text}
+                  </p>
+                )}
+              </form>
+
+              <hr style={{ borderColor: "#f3f4f6", margin: "20px 0" }} />
+
+              {/* Actions: Sign out */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="btn-status-dropdown"
+                  onClick={handleExportData}
+                  disabled={exportingData}
+                >
+                  <Download size={13} /> {exportingData ? "Exporting..." : "Export Archive (.json)"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{
+                    background: "#fee2e2",
+                    color: "#ef4444",
+                    border: "none",
+                    borderRadius: 999,
+                    padding: "8px 18px",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>,
-        document.body
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

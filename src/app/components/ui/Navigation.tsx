@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RandomLetterSwap } from "./random-letter-swap";
 import { createClient } from "@/utils/supabase/client";
+import { LayoutDashboard, Laptop, Cpu, LogOut, ChevronDown } from "lucide-react";
 
 type NavLink = { label: string; href: string; external?: boolean };
 type NavGroup = { title: string; links: NavLink[] };
@@ -30,28 +31,6 @@ const navStructure: NavItem[] = [
     }
   },
   {
-    label: "Platform",
-    href: "/platform",
-    mainGroup: {
-      title: "Explore Platform",
-      links: [
-        { label: "Platform Overview", href: "/platform" },
-        { label: "API Dashboard", href: "/platform/dashboard", external: true },
-        { label: "Models", href: "/platform/models" },
-        { label: "Skills", href: "/platform/skills" },
-      ]
-    },
-    subGroup: {
-      title: "Capabilities",
-      links: [
-        { label: "API Console", href: "/platform/api" },
-        { label: "Memory", href: "/platform/memory" },
-        { label: "Tools", href: "/platform/tools" },
-        { label: "Documentation", href: "/developers/docs" },
-      ]
-    }
-  },
-  {
     label: "Use Cases",
     href: "/use-cases",
     mainGroup: {
@@ -67,26 +46,6 @@ const navStructure: NavItem[] = [
       links: [
         { label: "For Teams", href: "/use-cases#teams" },
         { label: "All Use Cases", href: "/use-cases" },
-      ]
-    }
-  },
-  {
-    label: "Developers",
-    href: "/developers",
-    mainGroup: {
-      title: "Explore Developers",
-      links: [
-        { label: "Documentation", href: "/developers/docs" },
-        { label: "API Reference", href: "/developers/api" },
-        { label: "Agent Framework", href: "/developers/agents" },
-      ]
-    },
-    subGroup: {
-      title: "Resources",
-      links: [
-        { label: "SDKs", href: "/developers/sdk" },
-        { label: "Developer Forum", href: "/developers/forum" },
-        { label: "Open Source Tools", href: "/developers/open-source", external: true },
       ]
     }
   },
@@ -187,6 +146,10 @@ export function Navigation() {
   const isAccountArea = pathname.startsWith("/platform") || pathname.startsWith("/dashboard");
   const showMarketingNav = !accountEmail || !isAccountArea;
 
+  if (pathname.startsWith("/dashboard")) {
+    return null;
+  }
+
   return (
     <>
       <motion.header
@@ -210,7 +173,7 @@ export function Navigation() {
           {/* Left Side: Logo + Main Nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 48, height: "100%" }}>
             <Link href="/" style={{ textDecoration: "none", color: "#fff", display: "flex", alignItems: "center", gap: 12 }}>
-              <img src="/logo.png" alt="Palama" width={26} height={26} style={{ borderRadius: 6, display: "block" }} />
+              <img src="/logo.png" alt="Palama" width={28} height={28} style={{ objectFit: "contain", display: "block" }} />
               <span style={{ fontWeight: 600, letterSpacing: "-0.02em", fontSize: "1.2rem" }}>
                 PALAMA{logoSuffix && <span style={{ fontWeight: 400, marginLeft: 8, color: "rgba(255,255,255,0.7)" }}>{logoSuffix}</span>}
               </span>
@@ -302,6 +265,14 @@ export function Navigation() {
                   <span style={{ maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {accountEmail}
                   </span>
+                  <ChevronDown
+                    size={14}
+                    style={{
+                      color: "rgba(255,255,255,0.6)",
+                      transition: "transform 0.2s",
+                      transform: accountMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
                 </button>
                 {accountMenuOpen && (
                   <div
@@ -309,12 +280,12 @@ export function Navigation() {
                       position: "absolute",
                       top: "calc(100% + 8px)",
                       right: 0,
-                      width: 200,
-                      background: "#111",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 12,
-                      boxShadow: "0 12px 28px rgba(0,0,0,0.6)",
-                      padding: 6,
+                      width: 210,
+                      background: "#111111",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      borderRadius: 14,
+                      boxShadow: "0 16px 36px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)",
+                      padding: "6px",
                       display: "flex",
                       flexDirection: "column",
                       gap: 2,
@@ -322,7 +293,7 @@ export function Navigation() {
                     }}
                   >
                     <Link
-                      href="/platform/profile"
+                      href="/dashboard"
                       onClick={() => setAccountMenuOpen(false)}
                       style={{
                         display: "flex",
@@ -330,14 +301,83 @@ export function Navigation() {
                         gap: 10,
                         padding: "9px 12px",
                         borderRadius: 8,
-                        color: "rgba(255,255,255,0.85)",
+                        color: "rgba(255,255,255,0.88)",
                         textDecoration: "none",
-                        fontSize: "0.9rem",
+                        fontSize: "0.88rem",
                         fontWeight: 500,
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "rgba(255,255,255,0.88)";
                       }}
                     >
-                      <span style={{ fontSize: "1rem" }}>⚙</span> Settings
+                      <LayoutDashboard size={15} style={{ color: "#9ca3af" }} />
+                      <span>Dashboard</span>
                     </Link>
+
+                    <Link
+                      href="/dashboard/devices"
+                      onClick={() => setAccountMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "9px 12px",
+                        borderRadius: 8,
+                        color: "rgba(255,255,255,0.88)",
+                        textDecoration: "none",
+                        fontSize: "0.88rem",
+                        fontWeight: 500,
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "rgba(255,255,255,0.88)";
+                      }}
+                    >
+                      <Laptop size={15} style={{ color: "#9ca3af" }} />
+                      <span>Devices</span>
+                    </Link>
+
+                    <Link
+                      href="/dashboard/tokens"
+                      onClick={() => setAccountMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "9px 12px",
+                        borderRadius: 8,
+                        color: "rgba(255,255,255,0.88)",
+                        textDecoration: "none",
+                        fontSize: "0.88rem",
+                        fontWeight: 500,
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                        e.currentTarget.style.color = "#ffffff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "rgba(255,255,255,0.88)";
+                      }}
+                    >
+                      <Cpu size={15} style={{ color: "#9ca3af" }} />
+                      <span>Tokens & Quota</span>
+                    </Link>
+
+                    <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "4px 6px" }} />
+
                     <button
                       onClick={handleLogout}
                       style={{
@@ -349,14 +389,25 @@ export function Navigation() {
                         border: "none",
                         background: "transparent",
                         color: "#f87171",
-                        fontSize: "0.9rem",
+                        fontSize: "0.88rem",
                         fontWeight: 500,
                         fontFamily: "inherit",
                         cursor: "pointer",
                         textAlign: "left",
+                        width: "100%",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(239, 68, 68, 0.12)";
+                        e.currentTarget.style.color = "#ef4444";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#f87171";
                       }}
                     >
-                      <span style={{ fontSize: "1rem" }}>⏻</span> Log out
+                      <LogOut size={15} />
+                      <span>Log out</span>
                     </button>
                   </div>
                 )}

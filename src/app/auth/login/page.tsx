@@ -168,7 +168,7 @@ function LoginPageContent() {
         .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(46,123,255,0.05) 0%, transparent 60%); border-radius: 50%; filter: blur(60px); pointer-events: none; }
         .ambient-glow-2 { position: absolute; bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0,212,136,0.03) 0%, transparent 60%); border-radius: 50%; filter: blur(80px); pointer-events: none; }
  
-        .auth-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; padding: 12px; border-radius: 8px; font-size: 0.88rem; text-align: center; }
+        .auth-error { color: #f87171; font-size: 0.88rem; text-align: center; padding: 4px 0; }
       `}</style>
 
       {/* Left Panel - Brand */}
@@ -266,10 +266,6 @@ function LoginPageContent() {
               <button className="auth-btn-outline" onClick={() => handleOAuthLogin("google")} disabled={loading}>
                 <img src="https://cdn.simpleicons.org/google/ffffff" width={18} height={18} alt="" />
                 Continue with Google
-              </button>
-              <button className="auth-btn-outline" onClick={() => handleOAuthLogin("github")} disabled={loading}>
-                <img src="https://cdn.simpleicons.org/github/ffffff" width={18} height={18} alt="" />
-                Continue with GitHub
               </button>
 
               <p style={{ textAlign: "center", fontSize: "0.9rem", color: "#a1a1aa", margin: "16px 0 0" }}>

@@ -20,16 +20,6 @@ const footerColumns = [
     ]
   },
   {
-    title: "Platform",
-    links: [
-      { label: "Platform Overview", href: "/platform" },
-      { label: "API Dashboard", href: "/platform/dashboard" },
-      { label: "API Console", href: "/platform/api" },
-      { label: "Memory & Context", href: "/platform/memory" },
-      { label: "Skills Marketplace", href: "/platform/skills" },
-    ]
-  },
-  {
     title: "Use Cases",
     links: [
       { label: "Overview", href: "/use-cases" },
@@ -37,16 +27,6 @@ const footerColumns = [
       { label: "For Developers", href: "/use-cases#developers" },
       { label: "For Teams", href: "/use-cases#teams" },
       { label: "Contact Sales", href: "/contact/sales" },
-    ]
-  },
-  {
-    title: "Developers",
-    links: [
-      { label: "Documentation", href: "/developers/docs" },
-      { label: "API Reference", href: "/developers/api" },
-      { label: "SDKs", href: "/developers/sdk" },
-      { label: "Agent Framework", href: "/developers/agents" },
-      { label: "Developer Forum", href: "/developers/forum" },
     ]
   },
   {
@@ -73,6 +53,10 @@ const footerColumns = [
 
 export default function Footer() {
   const pathname = usePathname();
+
+  if (pathname && pathname.startsWith("/dashboard")) {
+    return null;
+  }
 
   const getLogoSuffix = () => {
     if (!pathname || pathname === "/") return "";

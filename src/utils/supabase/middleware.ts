@@ -6,10 +6,16 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://vlroxlrxpnvovajohids.supabase.co'
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_XXBO_7SbYXz3VCI0F0vtsw_9LeT9tgz'
+
+  if (!supabaseUrl || !anonKey) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey!,
+    supabaseUrl,
+    anonKey,
     {
       global: {
         fetch: async (...args) => {

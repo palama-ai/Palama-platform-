@@ -1,10 +1,15 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export default function ActionField() {
+  const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDashboard = Boolean(pathname && pathname.startsWith("/dashboard"));
 
   useEffect(() => {
+    if (isDashboard) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -87,7 +92,11 @@ export default function ActionField() {
       window.removeEventListener("mousemove", handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isDashboard]);
+
+  if (isDashboard) {
+    return null;
+  }
 
   return (
     <canvas

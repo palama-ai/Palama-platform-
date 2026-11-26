@@ -134,7 +134,7 @@ function VerifyPageContent() {
         .auth-link { color: #a1a1aa; text-decoration: none; transition: color 0.2s; background: none; border: none; font-size: 0.9rem; font-family: inherit; cursor: pointer; padding: 0; }
         .auth-link:hover { color: #fff; text-decoration: underline; }
         
-        .error-banner { width: 100%; padding: 10px 14px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.85rem; text-align: center; }
+        .error-banner { width: 100%; padding: 4px 0; color: #f87171; font-size: 0.85rem; text-align: center; }
 
         .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(46,123,255,0.05) 0%, transparent 60%); border-radius: 50%; filter: blur(60px); pointer-events: none; }
         .ambient-glow-2 { position: absolute; bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0,212,136,0.03) 0%, transparent 60%); border-radius: 50%; filter: blur(80px); pointer-events: none; }

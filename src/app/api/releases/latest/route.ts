@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getDesktopServerConfig } from '@/lib/desktop-config'
 
 /**
  * GET /api/releases/latest — release feed for Palama Co-Worker auto-update.
@@ -66,6 +67,16 @@ async function fromGitHub() {
 }
 
 export async function GET() {
+  const cfg = await getDesktopServerConfig().catch(() => null)
+  const policyFields = cfg
+    ? {
+        min_supported_version: cfg.min_supported_version,
+        blocked_versions: cfg.blocked_versions,
+        force_update_message: cfg.force_update_message,
+        weekly_token_quota: cfg.weekly_token_quota,
+        ...(cfg.models ? { models: cfg.models } : {}),
+      }
+    : {}
   try {
     const manual = (process.env.RELEASE_VERSION || '').trim()
     if (manual) {
@@ -73,12 +84,14 @@ export async function GET() {
         version: manual,
         download_url: (process.env.RELEASE_DOWNLOAD_URL || '').trim(),
         notes: (process.env.RELEASE_NOTES || '').trim(),
+        ...policyFields,
       })
     }
-    return NextResponse.json(await fromGitHub())
+    const gh = await fromGitHub()
+    return NextResponse.json({ ...gh, ...policyFields })
   } catch (e: any) {
     // Serve stale cache rather than breaking update checks on transient errors.
-    if (cache) return NextResponse.json(cache.payload)
-    return NextResponse.json({ ...empty(), error: e?.message || 'feed unavailable' })
+    if (cache) return NextResponse.json({ ...cache.payload, ...policyFields })
+    return NextResponse.json({ ...empty(), ...policyFields, error: e?.message || 'feed unavailable' })
   }
 }

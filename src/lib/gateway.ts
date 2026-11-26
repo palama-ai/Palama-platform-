@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { validateApiKey, logApiUsage } from '@/lib/api-keys'
-import { getQuota, recordTokenUsage, extractGatewayUsage, isRealUser, TOKEN_QUOTA_LIMIT } from '@/lib/token-usage'
+import { getQuota, recordTokenUsage, extractGatewayUsage, isRealUser } from '@/lib/token-usage'
 
 export type GatewayCaller =
   | { kind: 'session'; userId: string }
@@ -119,7 +119,7 @@ export async function forwardToGateway(
       if (quota.is_exceeded) {
         const why = quota.unknown
           ? 'Token usage could not be verified right now. Reconnect and try again.'
-          : `Token usage limit reached for this week: ${(quota.used_tokens ?? 0).toLocaleString()} / ${TOKEN_QUOTA_LIMIT.toLocaleString()} tokens (100%). Resets ${quota.resets_at}.`
+          : `Token usage limit reached for this week: ${(quota.used_tokens ?? 0).toLocaleString()} / ${quota.total_quota.toLocaleString()} tokens (100%). Resets ${quota.resets_at}.`
         return NextResponse.json({ error: why, quota }, { status: 429 })
       }
     } catch (e: any) {
