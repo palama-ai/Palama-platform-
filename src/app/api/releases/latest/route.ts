@@ -26,10 +26,55 @@ const REPO = (process.env.GITHUB_REPO || 'Palama-persona-Release').trim() || 'Pa
 const TOKEN = (process.env.GITHUB_TOKEN || '').trim()
 const CACHE_TTL_MS = 15 * 60 * 1000
 
-let cache: { at: number; payload: { version: string; download_url: string; notes: string } } | null = null
+let cache: { at: number; payload: { version: string; download_url: string; notes: string; sha256: string } } | null = null
 
 function empty() {
-  return { version: '', download_url: '', notes: '' }
+  return { version: '', download_url: '', notes: '', sha256: '' }
+}
+
+/** Extract a 64-hex-char SHA-256 from a GitHub asset digest ("sha256:<hex>") or return ''. */
+function extractDigest(asset: any): string {
+  const raw = typeof asset?.digest === 'string' ? asset.digest : ''
+  const m = raw.match(/^sha256:([a-f0-9]{64})$/i)
+  return m ? m[1].toLowerCase() : ''
+}
+
+/**
+ * Try to find a companion sha256 checksum file for the setup asset among its
+ * sibling release assets (e.g. "Palama Setup 1.2.3.exe.sha256" or "sha256sums.txt").
+ * If found, download the small text file and extract the 64-hex SHA-256 digest.
+ */
+async function fetchCompanionSha256(setupName: string, assets: any[]): Promise<string> {
+  // Look for "<setupName>.sha256" or "sha256sums.txt"
+  const candidates = assets.filter(
+    (a: any) =>
+      typeof a?.name === 'string' &&
+      typeof a?.browser_download_url === 'string' &&
+      (a.name === `${setupName}.sha256` || /sha256sums?\.txt$/i.test(a.name)) &&
+      (a.size ?? 0) < 4096 // Safety: don't download large files
+  )
+  for (const ca of candidates) {
+    try {
+      const dl = await fetch(ca.browser_download_url, {
+        headers: { 'User-Agent': 'Palama-Updater/1.0' },
+      })
+      if (!dl.ok) continue
+      const txt = await dl.text()
+      // Format: standalone 64-hex, or "<hex>  <filename>"
+      for (const line of txt.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        // Standalone 64 hex chars (e.g. "<setupName>.sha256" file)
+        if (/^[a-f0-9]{64}$/i.test(trimmed)) return trimmed.toLowerCase()
+        // "<hash>  <filename>" (sha256sum format)
+        const parts = trimmed.split(/\s+/)
+        if (parts.length >= 2 && /^[a-f0-9]{64}$/i.test(parts[0]) && parts[parts.length - 1].includes(setupName)) {
+          return parts[0].toLowerCase()
+        }
+      }
+    } catch { /* non-critical — skip */ }
+  }
+  return ''
 }
 
 async function fromGitHub() {
@@ -55,10 +100,14 @@ async function fromGitHub() {
         typeof a?.browser_download_url === 'string'
     )
     if (!setup) continue
+    // SHA-256: prefer GitHub asset digest, then companion .sha256 file
+    let sha256 = extractDigest(setup)
+    if (!sha256) sha256 = await fetchCompanionSha256(setup.name, assets)
     const payload = {
       version: String(rel.tag_name || '').trim(),
       download_url: String(setup.browser_download_url),
       notes: String(rel.body || '').slice(0, 2000),
+      sha256,
     }
     cache = { at: Date.now(), payload }
     return payload
@@ -80,10 +129,14 @@ export async function GET() {
   try {
     const manual = (process.env.RELEASE_VERSION || '').trim()
     if (manual) {
+      // Normalize RELEASE_SHA256: must be exactly 64 lowercase hex chars
+      const rawSha = (process.env.RELEASE_SHA256 || '').trim()
+      const sha256 = /^[a-f0-9]{64}$/i.test(rawSha) ? rawSha.toLowerCase() : ''
       return NextResponse.json({
         version: manual,
         download_url: (process.env.RELEASE_DOWNLOAD_URL || '').trim(),
         notes: (process.env.RELEASE_NOTES || '').trim(),
+        sha256,
         ...policyFields,
       })
     }
