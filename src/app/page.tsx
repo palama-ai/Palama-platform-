@@ -1,68 +1,15 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import PalamaHero from "./components/ui/PalamaHero";
 
 export default function Home() {
-  const [inputValue, setInputValue] = useState("");
-  const [mode, setMode] = useState<"Fast" | "Deep">("Deep");
-
   return (
     <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* 01 — HERO */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      <section style={{
-        display: "flex", flexDirection: "column",
-        justifyContent: "center", alignItems: "center", textAlign: "center",
-        paddingTop: "calc(var(--nav-height) + 48px)", paddingBottom: 24,
-      }}>
-        <motion.h2
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ fontSize: "1.4rem", fontWeight: 600, marginBottom: 24, color: "#fff" }}
-        >
-          What can I help with?
-        </motion.h2>
-
-        {/* Chatbot Input */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08 }}
-          style={{ width: "100%", maxWidth: 600, padding: "0 24px" }}
-        >
-          <div style={{ background: "#1a1a1a", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div style={{ padding: "14px 18px 10px" }}>
-              <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask Palama anything or request an action..."
-                style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: "0.9rem", fontFamily: "inherit" }}
-              />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px 10px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <button style={{ width: 30, height: 30, borderRadius: 8, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "#777", fontSize: "1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button style={{ width: 30, height: 30, borderRadius: "50%", background: inputValue.trim() ? "#fff" : "#333", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={inputValue.trim() ? "#000" : "#666"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Pills */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          style={{ display: "flex", gap: 8, marginTop: 14 }}
-        >
-          {["Talk with Palama", "API Platform", "Stories", "More"].map((pill) => (
-            <button key={pill} style={{ padding: "5px 14px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "#fff", fontSize: "0.78rem", cursor: "pointer" }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-            >{pill}</button>
-          ))}
-        </motion.div>
-      </section>
+      <PalamaHero />
 
       {/* Content wrapper */}
       <div style={{ maxWidth: 1060, margin: "0 auto", padding: "0 24px" }}>

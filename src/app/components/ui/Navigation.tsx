@@ -145,6 +145,8 @@ export function Navigation() {
   // show a clean header for logged-in users.
   const isAccountArea = pathname.startsWith("/platform") || pathname.startsWith("/dashboard");
   const showMarketingNav = !accountEmail || !isAccountArea;
+  // On the public homepage hero (light alabaster surface), keep navbar inks crisp dark until scrolled.
+  const isLightHeroNav = pathname === "/" && !scrolled && !activeDropdown;
 
   if (pathname.startsWith("/dashboard")) {
     return null;
@@ -163,8 +165,12 @@ export function Navigation() {
           right: 0,
           zIndex: 100,
           background: scrolled || activeDropdown ? "#000" : "transparent",
-          borderBottom: scrolled || activeDropdown ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid transparent",
-          transition: "background 0.3s, border-color 0.3s",
+          borderBottom: scrolled || activeDropdown
+            ? "1px solid rgba(255, 255, 255, 0.1)"
+            : isLightHeroNav
+              ? "1px solid rgba(10, 10, 12, 0.06)"
+              : "1px solid transparent",
+          transition: "background 0.3s, border-color 0.3s, color 0.3s",
         }}
         onMouseLeave={() => setActiveDropdown(null)}
       >
@@ -172,10 +178,10 @@ export function Navigation() {
           
           {/* Left Side: Logo + Main Nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 48, height: "100%" }}>
-            <Link href="/" style={{ textDecoration: "none", color: "#fff", display: "flex", alignItems: "center", gap: 12 }}>
-              <img src="/logo.png" alt="Palama" width={28} height={28} style={{ objectFit: "contain", display: "block" }} />
+            <Link href="/" style={{ textDecoration: "none", color: isLightHeroNav ? "#0d0d10" : "#fff", display: "flex", alignItems: "center", gap: 12, transition: "color 0.25s" }}>
+              <img src="/logo.png" alt="Palama" width={28} height={28} style={{ objectFit: "contain", display: "block", filter: isLightHeroNav ? "brightness(0.14) contrast(1.2)" : "none", transition: "filter 0.25s" }} />
               <span style={{ fontWeight: 600, letterSpacing: "-0.02em", fontSize: "1.2rem" }}>
-                PALAMA{logoSuffix && <span style={{ fontWeight: 400, marginLeft: 8, color: "rgba(255,255,255,0.7)" }}>{logoSuffix}</span>}
+                PALAMA{logoSuffix && <span style={{ fontWeight: 400, marginLeft: 8, color: isLightHeroNav ? "rgba(13,13,16,0.65)" : "rgba(255,255,255,0.7)" }}>{logoSuffix}</span>}
               </span>
             </Link>
             
@@ -189,16 +195,20 @@ export function Navigation() {
                   <Link
                     href={item.href}
                     style={{
-                      color: activeDropdown === item.label ? "#fff" : "rgba(255, 255, 255, 0.7)",
+                      color: isLightHeroNav
+                        ? (activeDropdown === item.label ? "#0d0d10" : "rgba(13, 13, 16, 0.68)")
+                        : (activeDropdown === item.label ? "#fff" : "rgba(255, 255, 255, 0.7)"),
                       textDecoration: "none",
                       fontSize: "0.95rem",
                       fontWeight: 500,
                       transition: "color 0.2s",
                       display: "block",
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = isLightHeroNav ? "#0d0d10" : "#fff")}
                     onMouseLeave={(e) => {
-                      if (activeDropdown !== item.label) e.currentTarget.style.color = "rgba(255, 255, 255, 0.7)";
+                      if (activeDropdown !== item.label) {
+                        e.currentTarget.style.color = isLightHeroNav ? "rgba(13, 13, 16, 0.68)" : "rgba(255, 255, 255, 0.7)";
+                      }
                     }}
                   >
                     <RandomLetterSwap label={item.label} style={{ padding: "8px 12px", display: "inline-block" }} />
@@ -215,7 +225,7 @@ export function Navigation() {
               style={{
                 background: "none",
                 border: "none",
-                color: "rgba(255, 255, 255, 0.7)",
+                color: isLightHeroNav ? "rgba(13, 13, 16, 0.7)" : "rgba(255, 255, 255, 0.7)",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -236,12 +246,12 @@ export function Navigation() {
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    color: "#fff",
+                    color: isLightHeroNav ? "#0d0d10" : "#fff",
                     background: "transparent",
                     fontSize: "0.9rem",
                     fontWeight: 500,
                     fontFamily: "inherit",
-                    border: "1px solid rgba(255,255,255,0.15)",
+                    border: isLightHeroNav ? "1px solid rgba(13,13,16,0.16)" : "1px solid rgba(255,255,255,0.15)",
                     borderRadius: 24,
                     padding: "6px 14px 6px 6px",
                     cursor: "pointer",
@@ -252,7 +262,7 @@ export function Navigation() {
                       width: 26,
                       height: 26,
                       borderRadius: "50%",
-                      background: "rgba(255,255,255,0.12)",
+                      background: isLightHeroNav ? "rgba(13,13,16,0.08)" : "rgba(255,255,255,0.12)",
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -268,7 +278,7 @@ export function Navigation() {
                   <ChevronDown
                     size={14}
                     style={{
-                      color: "rgba(255,255,255,0.6)",
+                      color: isLightHeroNav ? "rgba(13,13,16,0.6)" : "rgba(255,255,255,0.6)",
                       transition: "transform 0.2s",
                       transform: accountMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
                     }}
@@ -417,7 +427,7 @@ export function Navigation() {
                 <Link
                   href="/auth/login"
                   style={{
-                    color: "rgba(255, 255, 255, 0.7)",
+                    color: isLightHeroNav ? "rgba(13, 13, 16, 0.72)" : "rgba(255, 255, 255, 0.7)",
                     textDecoration: "none",
                     fontSize: "0.95rem",
                     fontWeight: 500,
@@ -425,23 +435,23 @@ export function Navigation() {
                 >
                   Log in
                 </Link>
-                <a
-                  href="https://app.palama.com"
+                <Link
+                  href="/download"
                   style={{
-                    color: "#000",
-                    background: "#fff",
+                    color: isLightHeroNav ? "#fff" : "#000",
+                    background: isLightHeroNav ? "#0d0d10" : "#fff",
                     padding: "8px 16px",
                     borderRadius: 24,
                     textDecoration: "none",
                     fontSize: "0.95rem",
                     fontWeight: 500,
-                    transition: "transform 0.2s ease, opacity 0.2s ease",
+                    transition: "transform 0.2s ease, opacity 0.2s ease, background 0.25s ease",
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
                 >
                   Try Palama <span style={{ marginLeft: 4 }}>↗</span>
-                </a>
+                </Link>
               </>
             )}
           </div>
