@@ -88,7 +88,6 @@ export default function DesktopAuthPage() {
       `}</style>
 
       <div className="auth-left">
-        <img src="/logo.png" alt="Palama" width={80} height={80} style={{ objectFit: "contain", marginBottom: 24 }} />
         <div className="massive-brand-text">Palama<br />Desktop</div>
       </div>
 
