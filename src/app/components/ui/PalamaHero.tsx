@@ -4,16 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Play, Sparkles, Target, Layers, AudioLines, Plus } from "lucide-react";
 
-const floatTransition = (delay = 0, duration = 6) => ({
-  y: {
-    duration,
-    repeat: Infinity,
-    repeatType: "reverse" as const,
-    ease: "easeInOut" as const,
-    delay,
-  },
-});
-
 function FourPointStar({ size = 14, color = "#0c0c0f" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} aria-hidden="true">
@@ -54,12 +44,10 @@ export default function PalamaHero() {
           justifyContent: "center",
         }}
       >
-        <motion.svg
+        <svg
           viewBox="0 0 100 100"
           width={78}
           height={78}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 36, repeat: Infinity, ease: "linear" }}
           style={{ position: "absolute", inset: 0 }}
         >
           <defs>
@@ -79,7 +67,7 @@ export default function PalamaHero() {
               • A MORE FOCUSED YOU • PALAMA AI
             </textPath>
           </text>
-        </motion.svg>
+        </svg>
         <FourPointStar size={14} color="#18181b" />
       </div>
 
@@ -338,13 +326,9 @@ export default function PalamaHero() {
           {/* ── 1. OUTER TOP-LEFT FLOATING CARD ── */}
           <motion.div
             className="hero-card-outer-left"
-            initial={{ opacity: 0, y: 18, rotate: -7 }}
-            animate={{ opacity: 1, y: [0, -7, 0], rotate: -5.5 }}
-            transition={{
-              opacity: { duration: 0.7, delay: 0.25 },
-              rotate: { duration: 0.7, delay: 0.25 },
-              ...floatTransition(0.4, 7),
-            }}
+            initial={{ opacity: 0, y: 14, rotate: -5.5 }}
+            animate={{ opacity: 1, y: 0, rotate: -5.5 }}
+            transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
               left: "clamp(4px, 3vw, 42px)",
@@ -396,13 +380,9 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
-              transition={{
-                opacity: { duration: 0.8, delay: 0.3 },
-                x: { duration: 0.8, delay: 0.3 },
-                ...floatTransition(1.1, 8),
-              }}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 146,
                 height: 92,
@@ -439,13 +419,9 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, rotate: -3 }}
-              animate={{ opacity: 1, scale: 1, rotate: -2.5, y: [0, -5, 0] }}
-              transition={{
-                opacity: { duration: 0.65, delay: 0.35 },
-                scale: { duration: 0.65, delay: 0.35 },
-                ...floatTransition(0.2, 6.2),
-              }}
+              initial={{ opacity: 0, scale: 0.96, rotate: -2.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: -2.5 }}
+              transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 174,
                 padding: "12px 14px",
@@ -495,13 +471,9 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, rotate: 2 }}
-              animate={{ opacity: 1, scale: 1, rotate: 1.5, y: [0, 5, 0] }}
-              transition={{
-                opacity: { duration: 0.65, delay: 0.42 },
-                scale: { duration: 0.65, delay: 0.42 },
-                ...floatTransition(1.6, 5.8),
-              }}
+              initial={{ opacity: 0, scale: 0.96, rotate: 1.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 1.5 }}
+              transition={{ duration: 0.6, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 174,
                 padding: "13px 14px",
@@ -551,13 +523,9 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
-              animate={{ opacity: 1, scale: 1, rotate: -1.5, y: [0, -6, 0] }}
-              transition={{
-                opacity: { duration: 0.65, delay: 0.4 },
-                scale: { duration: 0.65, delay: 0.4 },
-                ...floatTransition(0.9, 6.5),
-              }}
+              initial={{ opacity: 0, scale: 0.96, rotate: -1.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: -1.5 }}
+              transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 174,
                 padding: "13px 14px",
@@ -607,13 +575,9 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: 20, rotate: 4 }}
-              animate={{ opacity: 1, x: 0, rotate: 3.5, y: [0, 6, 0] }}
-              transition={{
-                opacity: { duration: 0.8, delay: 0.46 },
-                x: { duration: 0.8, delay: 0.46 },
-                ...floatTransition(1.9, 7.5),
-              }}
+              initial={{ opacity: 0, x: 16, rotate: 3.5 }}
+              animate={{ opacity: 1, x: 0, rotate: 3.5 }}
+              transition={{ duration: 0.7, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 142,
                 height: 96,
@@ -642,13 +606,9 @@ export default function PalamaHero() {
           {/* ── 7. OUTER TOP-RIGHT FLOATING SYNC CARD ── */}
           <motion.div
             className="hero-card-outer-right"
-            initial={{ opacity: 0, y: 18, rotate: 6 }}
-            animate={{ opacity: 1, y: [0, -7, 0], rotate: 4.5 }}
-            transition={{
-              opacity: { duration: 0.7, delay: 0.3 },
-              rotate: { duration: 0.7, delay: 0.3 },
-              ...floatTransition(1.2, 6.8),
-            }}
+            initial={{ opacity: 0, y: 14, rotate: 4.5 }}
+            animate={{ opacity: 1, y: 0, rotate: 4.5 }}
+            transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
               right: "clamp(4px, 3vw, 38px)",
@@ -761,31 +721,6 @@ export default function PalamaHero() {
               </span>
             </div>
           </motion.div>
-
-          {/* ── BOTTOM-RIGHT MINIMAL MANIFESTO CORNER ── */}
-          <motion.div
-            className="hero-corner-right"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            style={{
-              position: "absolute",
-              right: 12,
-              bottom: 38,
-              textAlign: "left",
-              zIndex: 20,
-            }}
-          >
-            <div style={{ marginBottom: 8 }}>
-              <FourPointStar size={12} color="#18181b" />
-            </div>
-            <div style={{ width: 14, height: 1, background: "rgba(12,12,15,0.35)", marginBottom: 8 }} />
-            <div style={{ fontSize: "0.75rem", lineHeight: 1.45, color: "#52525b" }}>
-              Less chaos.
-              <br />
-              More clarity.
-            </div>
-          </motion.div>
         </div>
       </div>
 
@@ -797,8 +732,7 @@ export default function PalamaHero() {
           .hero-card-outer-left,
           .hero-card-outer-right,
           .hero-card-horizon,
-          .hero-corner-left,
-          .hero-corner-right {
+          .hero-corner-left {
             display: none !important;
           }
           .hero-card-focus {
