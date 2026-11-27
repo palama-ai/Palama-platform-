@@ -294,38 +294,46 @@ export default function PalamaHero() {
             }}
           />
 
-          {/* Center Editorial Monochrome Portrait */}
-          <motion.div
-            initial={{ opacity: 0, y: 26, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+          {/* Center Editorial Monochrome Portrait — outer static wrapper keeps X centered cleanly */}
+          <div
             style={{
               position: "absolute",
-              left: "50%",
+              left: 0,
+              right: 0,
               bottom: 0,
-              transform: "translateX(-50%)",
-              width: "clamp(320px, 42vw, 490px)",
-              height: "clamp(380px, 47vw, 515px)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-end",
               zIndex: 12,
               pointerEvents: "none",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "center",
             }}
           >
-            <img
-              src="/hero-portrait.png"
-              alt="Calm focus with Palama"
+            <motion.div
+              initial={{ opacity: 0, y: 26, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                objectPosition: "center bottom",
-                display: "block",
-                filter: "contrast(1.04)",
+                width: "clamp(320px, 42vw, 490px)",
+                height: "clamp(380px, 47vw, 515px)",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "center",
               }}
-            />
-          </motion.div>
+            >
+              <img
+                src="/hero-portrait.png"
+                alt="Calm focus with Palama"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  objectPosition: "center bottom",
+                  display: "block",
+                  filter: "contrast(1.04)",
+                }}
+              />
+            </motion.div>
+          </div>
 
           {/* ── 1. OUTER TOP-LEFT FLOATING CARD ── */}
           <motion.div
@@ -378,238 +386,258 @@ export default function PalamaHero() {
           </motion.div>
 
           {/* ── 2. INNER LEFT BACKGROUND CURVED LANDSCAPE CARD ── */}
-          <motion.div
+          <div
             className="hero-card-horizon"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
-            transition={{
-              opacity: { duration: 0.8, delay: 0.3 },
-              x: { duration: 0.8, delay: 0.3 },
-              ...floatTransition(1.1, 8),
-            }}
             style={{
               position: "absolute",
-              left: "clamp(90px, 21%, 235px)",
-              top: 205,
-              width: 146,
-              height: 92,
-              borderRadius: 14,
-              padding: 4,
-              background: "rgba(255,255,255,0.7)",
-              border: "1px solid rgba(255,255,255,0.9)",
-              boxShadow: "0 16px 36px rgba(0,0,0,0.1)",
-              transform: "perspective(650px) rotateY(22deg) rotateZ(-4deg)",
+              left: "calc(50% - 310px)",
+              top: 215,
               zIndex: 9,
-              overflow: "hidden",
             }}
           >
-            <img
-              src="/hero-card-horizon.jpg"
-              alt="Deep perspective"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 10,
-                display: "block",
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
+              transition={{
+                opacity: { duration: 0.8, delay: 0.3 },
+                x: { duration: 0.8, delay: 0.3 },
+                ...floatTransition(1.1, 8),
               }}
-            />
-          </motion.div>
+              style={{
+                width: 146,
+                height: 92,
+                borderRadius: 14,
+                padding: 4,
+                background: "rgba(255,255,255,0.72)",
+                border: "1px solid rgba(255,255,255,0.92)",
+                boxShadow: "0 16px 36px rgba(0,0,0,0.1)",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="/hero-card-horizon.jpg"
+                alt="Deep perspective"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: 10,
+                  display: "block",
+                }}
+              />
+            </motion.div>
+          </div>
 
           {/* ── 3. INNER LEFT-UPPER FROSTED GLASS PILL (Focus) ── */}
-          <motion.div
+          <div
             className="hero-card-focus"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1, y: [0, -5, 0] }}
-            transition={{
-              opacity: { duration: 0.65, delay: 0.35 },
-              scale: { duration: 0.65, delay: 0.35 },
-              ...floatTransition(0.2, 6.2),
-            }}
             style={{
               position: "absolute",
-              left: "clamp(130px, 27%, 302px)",
-              top: 120,
-              width: 174,
-              padding: "12px 14px",
-              borderRadius: 14,
-              background: "rgba(255, 255, 255, 0.72)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255, 255, 255, 0.85)",
-              boxShadow: "0 14px 36px rgba(12, 12, 15, 0.08)",
-              transform: "perspective(700px) rotateY(10deg) rotateZ(-3deg)",
+              left: "calc(50% - 252px)",
+              top: 128,
               zIndex: 18,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              textAlign: "left",
             }}
           >
-            <span
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, rotate: -3 }}
+              animate={{ opacity: 1, scale: 1, rotate: -2.5, y: [0, -5, 0] }}
+              transition={{
+                opacity: { duration: 0.65, delay: 0.35 },
+                scale: { duration: 0.65, delay: 0.35 },
+                ...floatTransition(0.2, 6.2),
+              }}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: "#e7f8c3",
-                display: "inline-flex",
+                width: 174,
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: "rgba(255, 255, 255, 0.76)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.88)",
+                boxShadow: "0 14px 36px rgba(12, 12, 15, 0.08)",
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                gap: 10,
+                textAlign: "left",
               }}
             >
-              <Target size={14} color="#4d7c0f" />
-            </span>
-            <div>
-              <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Focus</div>
-              <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                Deep work, real results.
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "#e7f8c3",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Target size={14} color="#4d7c0f" />
+              </span>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Focus</div>
+                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
+                  Deep work, real results.
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* ── 4. INNER LEFT-LOWER FROSTED GLASS PILL (Memory) ── */}
-          <motion.div
+          <div
             className="hero-card-memory"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1, y: [0, 5, 0] }}
-            transition={{
-              opacity: { duration: 0.65, delay: 0.42 },
-              scale: { duration: 0.65, delay: 0.42 },
-              ...floatTransition(1.6, 5.8),
-            }}
             style={{
               position: "absolute",
-              left: "clamp(160px, 31%, 355px)",
-              top: 256,
-              width: 172,
-              padding: "13px 14px",
-              borderRadius: 15,
-              background: "rgba(255, 255, 255, 0.78)",
-              backdropFilter: "blur(22px)",
-              WebkitBackdropFilter: "blur(22px)",
-              border: "1px solid rgba(255, 255, 255, 0.92)",
-              boxShadow: "0 18px 40px rgba(12, 12, 15, 0.11)",
-              transform: "perspective(700px) rotateY(8deg) rotateZ(2deg)",
+              left: "calc(50% - 210px)",
+              top: 266,
               zIndex: 22,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              textAlign: "left",
             }}
           >
-            <span
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, rotate: 2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 1.5, y: [0, 5, 0] }}
+              transition={{
+                opacity: { duration: 0.65, delay: 0.42 },
+                scale: { duration: 0.65, delay: 0.42 },
+                ...floatTransition(1.6, 5.8),
+              }}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: "#ede9fe",
-                display: "inline-flex",
+                width: 174,
+                padding: "13px 14px",
+                borderRadius: 15,
+                background: "rgba(255, 255, 255, 0.8)",
+                backdropFilter: "blur(22px)",
+                WebkitBackdropFilter: "blur(22px)",
+                border: "1px solid rgba(255, 255, 255, 0.92)",
+                boxShadow: "0 18px 40px rgba(12, 12, 15, 0.11)",
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                gap: 10,
+                textAlign: "left",
               }}
             >
-              <Sparkles size={14} color="#7c3aed" />
-            </span>
-            <div>
-              <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Memory</div>
-              <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                Context that stays yours.
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "#ede9fe",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Sparkles size={14} color="#7c3aed" />
+              </span>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Memory</div>
+                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
+                  Context that stays yours.
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
-          {/* ── 5. INNER RIGHT-UPPER FROSTED GLASS PILL (Execute) ── */}
-          <motion.div
+          {/* ── 5. INNER RIGHT-UPPER FROSTED GLASS PILL (Plan) ── */}
+          <div
             className="hero-card-execute"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1, y: [0, -6, 0] }}
-            transition={{
-              opacity: { duration: 0.65, delay: 0.4 },
-              scale: { duration: 0.65, delay: 0.4 },
-              ...floatTransition(0.9, 6.5),
-            }}
             style={{
               position: "absolute",
-              right: "clamp(135px, 24%, 268px)",
+              left: "calc(50% + 90px)",
               top: 176,
-              width: 174,
-              padding: "13px 14px",
-              borderRadius: 15,
-              background: "rgba(255, 255, 255, 0.78)",
-              backdropFilter: "blur(22px)",
-              WebkitBackdropFilter: "blur(22px)",
-              border: "1px solid rgba(255, 255, 255, 0.92)",
-              boxShadow: "0 16px 38px rgba(12, 12, 15, 0.09)",
-              transform: "perspective(700px) rotateY(-12deg) rotateZ(-2.5deg)",
               zIndex: 20,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              textAlign: "left",
             }}
           >
-            <span
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: -1.5, y: [0, -6, 0] }}
+              transition={{
+                opacity: { duration: 0.65, delay: 0.4 },
+                scale: { duration: 0.65, delay: 0.4 },
+                ...floatTransition(0.9, 6.5),
+              }}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: "#ffedd5",
-                display: "inline-flex",
+                width: 174,
+                padding: "13px 14px",
+                borderRadius: 15,
+                background: "rgba(255, 255, 255, 0.8)",
+                backdropFilter: "blur(22px)",
+                WebkitBackdropFilter: "blur(22px)",
+                border: "1px solid rgba(255, 255, 255, 0.92)",
+                boxShadow: "0 16px 38px rgba(12, 12, 15, 0.09)",
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                gap: 10,
+                textAlign: "left",
               }}
             >
-              <Layers size={14} color="#ea580c" />
-            </span>
-            <div>
-              <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Plan</div>
-              <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                Turn prompts into action.
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "#ffedd5",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Layers size={14} color="#ea580c" />
+              </span>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Plan</div>
+                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
+                  Turn prompts into action.
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
 
           {/* ── 6. INNER RIGHT-LOWER DARK ECLIPSE ORB CARD ── */}
-          <motion.div
+          <div
             className="hero-card-orb"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0, y: [0, 6, 0] }}
-            transition={{
-              opacity: { duration: 0.8, delay: 0.46 },
-              x: { duration: 0.8, delay: 0.46 },
-              ...floatTransition(1.9, 7.5),
-            }}
             style={{
               position: "absolute",
-              right: "clamp(155px, 25%, 285px)",
-              top: 292,
-              width: 142,
-              height: 96,
-              borderRadius: 15,
-              padding: 3,
-              background: "#0a0a0c",
-              border: "1px solid rgba(255, 255, 255, 0.16)",
-              boxShadow: "0 20px 44px rgba(0, 0, 0, 0.28)",
-              transform: "perspective(650px) rotateY(-18deg) rotateZ(4deg)",
+              left: "calc(50% + 108px)",
+              top: 294,
               zIndex: 16,
-              overflow: "hidden",
             }}
           >
-            <img
-              src="/hero-card-orb.jpg"
-              alt="Autonomous intelligence core"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 12,
-                display: "block",
+            <motion.div
+              initial={{ opacity: 0, x: 20, rotate: 4 }}
+              animate={{ opacity: 1, x: 0, rotate: 3.5, y: [0, 6, 0] }}
+              transition={{
+                opacity: { duration: 0.8, delay: 0.46 },
+                x: { duration: 0.8, delay: 0.46 },
+                ...floatTransition(1.9, 7.5),
               }}
-            />
-          </motion.div>
+              style={{
+                width: 142,
+                height: 96,
+                borderRadius: 15,
+                padding: 3,
+                background: "#0a0a0c",
+                border: "1px solid rgba(255, 255, 255, 0.16)",
+                boxShadow: "0 20px 44px rgba(0, 0, 0, 0.28)",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src="/hero-card-orb.jpg"
+                alt="Autonomous intelligence core"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  borderRadius: 12,
+                  display: "block",
+                }}
+              />
+            </motion.div>
+          </div>
 
           {/* ── 7. OUTER TOP-RIGHT FLOATING SYNC CARD ── */}
           <motion.div
@@ -784,11 +812,13 @@ export default function PalamaHero() {
             width: 148px !important;
           }
           .hero-card-execute {
+            left: auto !important;
             right: 12px !important;
             top: 130px !important;
             width: 148px !important;
           }
           .hero-card-orb {
+            left: auto !important;
             right: 14px !important;
             top: 265px !important;
             width: 120px !important;
