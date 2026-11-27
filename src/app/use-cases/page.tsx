@@ -7,6 +7,7 @@ const CASES = [
     id: "business",
     title: "For Business",
     desc: "Automate repetitive operations, reports, and back-office workflows. Palama operates your existing tools — no migration needed.",
+    video: "/videos/use-case-automation.mp4",
     cta: "Join the waitlist",
     href: "/dashboard",
   },
@@ -14,6 +15,7 @@ const CASES = [
     id: "developers",
     title: "For Developers",
     desc: "Generate code, run commands, manage packages, and debug projects from one prompt. Works with your stack and your terminal.",
+    video: "/videos/use-case-developers.mp4",
     cta: "Join the waitlist",
     href: "/dashboard",
   },
@@ -21,6 +23,7 @@ const CASES = [
     id: "personal",
     title: "For Personal Use",
     desc: "Organize files, research the web, draft documents, and handle daily computer chores while you focus on what matters.",
+    video: "/videos/use-case-automation.mp4",
     cta: "Download the app",
     href: "/download",
   },
@@ -28,6 +31,7 @@ const CASES = [
     id: "teams",
     title: "For Teams",
     desc: "Share skills, standardize workflows, and give every teammate an assistant that knows your tools and processes.",
+    video: "/videos/use-case-research.mp4",
     cta: "Join the waitlist",
     href: "/dashboard",
   },
@@ -68,6 +72,18 @@ export default function UseCasesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 * i }}
           >
+            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "#08080a", marginBottom: 6, aspectRatio: "16 / 9" }}>
+              <video
+                src={c.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls
+                preload="metadata"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            </div>
             <h2>{c.title}</h2>
             <p>{c.desc}</p>
             <Link href={c.href}>{c.cta}</Link>

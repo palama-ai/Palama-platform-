@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import PalamaHero from "./components/ui/PalamaHero";
+import UseCaseVideos from "./components/ui/UseCaseVideos";
 
 export default function Home() {
   return (
@@ -37,7 +38,7 @@ export default function Home() {
 
             <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 24 }}>
               {[
-                { title: "Expanding Daybreak as the Cyber Defense Window Narrows", tag: "Security", date: "Aug 10, 2026", href: "/safety/security-privacy" },
+                { title: "Expanding Daybreak as the Cyber Defense Window Narrows", tag: "Security", date: "Aug 10, 2026", href: "/news" },
                 { title: "Advancing the price-performance frontier with Palama 2.0", tag: "Product", date: "Jul 30, 2026", href: "/products/release-notes" },
               ].map((card) => (
                 <Link key={card.title} href={card.href} style={{ textDecoration: "none", color: "#fff" }}>
@@ -54,42 +55,9 @@ export default function Home() {
 
 
         {/* ═══════════════════════════════════════════════════════════ */}
-        {/* STORIES */}
+        {/* USE CASES (VIDEOS) */}
         {/* ═══════════════════════════════════════════════════════════ */}
-        <section style={{ paddingTop: 32, paddingBottom: 56 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-            <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#fff" }}>Stories</h2>
-            <Link href="/use-cases" style={{ fontSize: "0.82rem", color: "#777", textDecoration: "none" }}>View all</Link>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 24, alignItems: "start" }}>
-            <Link href="/use-cases" style={{ textDecoration: "none", color: "#fff" }}>
-              <div style={{ borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ height: 420, background: "#111", borderRadius: 12 }} />
-                <div style={{ paddingTop: 16 }}>
-                  <h2 style={{ fontSize: "1.4rem", fontWeight: 600, lineHeight: 1.3, marginBottom: 8, color: "#fff", letterSpacing: "-0.02em" }}>
-                    Training to cycle across Antarctica with Palama
-                  </h2>
-                  <div style={{ fontSize: "0.82rem", color: "#a1a1aa" }}>Jun 11, 2026</div>
-                </div>
-              </div>
-            </Link>
-
-            <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 24 }}>
-              {[
-                { title: "Creating new simulations of black holes with Codex", date: "Jun 11, 2026", href: "/use-cases" },
-                { title: "Chip Ganassi Racing × Palama", date: "May 28, 2026", href: "/use-cases" },
-              ].map((card) => (
-                <Link key={card.title} href={card.href} style={{ textDecoration: "none", color: "#fff" }}>
-                  <div>
-                    <div style={{ width: "100%", height: 160, borderRadius: 10, background: "#111", marginBottom: 12 }} />
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: 500, lineHeight: 1.4, marginBottom: 6, color: "#fff" }}>{card.title}</h3>
-                    <div style={{ fontSize: "0.75rem", color: "#a1a1aa" }}>{card.date}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
+        <UseCaseVideos />
 
 
       </div>

@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const searchData = [
-  { group: "Products", items: [{ label: "Palama Engine", href: "/product" }, { label: "Agent Swarms", href: "/product" }] },
-  { group: "Platform", items: [{ label: "Documentation", href: "/platform" }, { label: "API Reference", href: "/platform" }] },
-  { group: "Company", items: [{ label: "About", href: "/company" }, { label: "Careers", href: "/company" }, { label: "Contact", href: "/company" }] },
+  { group: "Products", items: [{ label: "Palama Products", href: "/products" }, { label: "Download App", href: "/download" }] },
+  { group: "Platform", items: [{ label: "Dashboard", href: "/dashboard" }, { label: "API Docs", href: "/developers/docs" }] },
+  { group: "Company", items: [{ label: "About Palama", href: "/company/about" }, { label: "Newsroom", href: "/news" }, { label: "Contact Sales", href: "/contact/sales" }] },
   { group: "Resources", items: [{ label: "Blog", href: "/resources/blog" }, { label: "Use Cases", href: "/use-cases" }] }
 ];
 

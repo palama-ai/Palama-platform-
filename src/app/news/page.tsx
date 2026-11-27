@@ -46,7 +46,7 @@ export default function Page() {
 
         <div style={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 24 }}>
           {[
-            { title: "Expanding Daybreak as the Cyber Defense Window Narrows", tag: "Security", date: "Aug 10, 2026", href: "/safety/security-privacy" },
+            { title: "Expanding Daybreak as the Cyber Defense Window Narrows", tag: "Security", date: "Aug 10, 2026", href: "/news" },
             { title: "Advancing the price-performance frontier with Palama 5.6", tag: "Product", date: "Jul 30, 2026", href: "/news" },
           ].map((card) => (
             <Link key={card.title} href={card.href} style={{ textDecoration: "none", color: "#fff" }}>

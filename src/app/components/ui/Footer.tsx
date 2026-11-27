@@ -4,15 +4,6 @@ import { usePathname } from "next/navigation";
 
 const footerColumns = [
   {
-    title: "Safety",
-    links: [
-      { label: "Safety Approach", href: "/safety/approach" },
-      { label: "Deployment Safety", href: "/safety/deployment" },
-      { label: "Security & Privacy", href: "/safety/security-privacy" },
-      { label: "Trust & Transparency", href: "/safety/trust" },
-    ]
-  },
-  {
     title: "Products",
     links: [
       { label: "Palama Co-Worker", href: "/download" },
@@ -33,17 +24,14 @@ const footerColumns = [
     title: "Company",
     links: [
       { label: "About Palama", href: "/company/about" },
-      { label: "Our Charter", href: "/company/charter" },
-      { label: "Careers", href: "/company/careers" },
+      { label: "Company Overview", href: "/company" },
       { label: "Newsroom", href: "/news" },
     ]
   },
   {
     title: "More",
     links: [
-      { label: "Academy", href: "/resources/academy" },
-      { label: "Webcasts", href: "/resources/webcasts" },
-      { label: "Podcast", href: "/resources/podcast" },
+      { label: "Blog", href: "/resources/blog" },
       { label: "Help Center", href: "/support/help" },
       { label: "Terms of Use", href: "/legal/terms" },
       { label: "Privacy Policy", href: "/legal/privacy" },

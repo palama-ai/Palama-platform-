@@ -62,43 +62,12 @@ export default function CompanyPage() {
         </div>
       </section>
 
-      {/* Team & Culture */}
-      <section className="section-padding" style={{ background: "#0a0a0a" }}>
-        <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
-            <div>
-              <h2 style={{ marginBottom: 24 }}>Careers at Palama</h2>
-              <p className="text-editorial" style={{ marginBottom: 32 }}>
-                We are hiring exceptional engineers, researchers, and designers to help build the foundation models and infrastructure for autonomous computer interaction. If you want to work on the most challenging problems in applied AI, we want to hear from you.
-              </p>
-              <Link href="/company/careers" style={{ background: "#fff", color: "#000", padding: "14px 28px", borderRadius: 4, fontWeight: 500, textDecoration: "none", display: "inline-block" }}>
-                View open roles
-              </Link>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              {[
-                "Research Engineering",
-                "Systems Infrastructure",
-                "Agent Architecture",
-                "Product Design",
-                "Applied ML",
-                "Security Engineering"
-              ].map(role => (
-                <div key={role} style={{ padding: "20px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: "0.95rem" }}>
-                  {role}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Security & Safety */}
-      <section className="section-padding">
+      <section className="section-padding" style={{ background: "#0a0a0a" }}>
         <div className="page-container" style={{ maxWidth: 900 }}>
-          <h2 style={{ marginBottom: 24 }}>Security and safety</h2>
+          <h2 style={{ marginBottom: 24 }}>Security and control</h2>
           <p className="text-editorial" style={{ marginBottom: 48 }}>
-            Autonomous agents that interact with real systems carry real responsibility. We design every layer of the Palama stack with safety, transparency, and user control as first principles.
+            Autonomous agents that interact with real systems carry real responsibility. We design every layer of the Palama stack with isolation, transparency, and user control as first principles.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {[
@@ -106,7 +75,7 @@ export default function CompanyPage() {
               { title: "Human-in-the-Loop", desc: "Users can configure which actions require explicit approval. Sensitive operations like sending emails or making purchases always require confirmation." },
               { title: "Cryptographic Audit Trail", desc: "Every action, reasoning step, and tool call is immutably logged. Enterprise customers can export complete audit trails for compliance." },
               { title: "Permission Boundaries", desc: "Agents can only access the tools, files, and services explicitly granted by the user. There is no implicit scope escalation." },
-              { title: "Red Team Testing", desc: "We continuously test our agents for adversarial misuse, unintended behavior, and edge-case failures. Results are published in our safety research." }
+              { title: "Continuous Red Teaming", desc: "We continuously test our agents against adversarial misuse, prompt injection, and privilege-escalation edge cases." }
             ].map((item, i) => (
               <div key={item.title} style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, padding: "32px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
                 <h3 style={{ fontSize: "1.05rem", fontWeight: 500 }}>{item.title}</h3>

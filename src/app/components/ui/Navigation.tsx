@@ -56,16 +56,15 @@ const navStructure: NavItem[] = [
       title: "Explore Company",
       links: [
         { label: "About Palama", href: "/company/about" },
-        { label: "Our Charter", href: "/company/charter" },
-        { label: "Careers", href: "/company/careers" },
+        { label: "Company Overview", href: "/company" },
       ]
     },
     subGroup: {
       title: "Resources",
       links: [
         { label: "Newsroom", href: "/news" },
-        { label: "Security & Privacy", href: "/safety/security-privacy" },
-        { label: "Trust & Transparency", href: "/safety/trust" },
+        { label: "Help Center", href: "/support/help" },
+        { label: "Contact Sales", href: "/contact/sales" },
       ]
     }
   }
@@ -135,7 +134,6 @@ export function Navigation() {
     if (pathname.startsWith("/developers")) return "Developers";
     if (pathname.startsWith("/company")) return "Company";
     if (pathname.startsWith("/news")) return "News";
-    if (pathname.startsWith("/safety")) return "Safety";
     return "";
   };
 
