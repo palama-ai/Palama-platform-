@@ -207,11 +207,17 @@ function LoginPageContent() {
         .auth-link { color: #a1a1aa; text-decoration: none; transition: color 0.2s; }
         .auth-link:hover { color: #fff; text-decoration: underline; }
  
-        .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(46,123,255,0.05) 0%, transparent 60%); border-radius: 50%; filter: blur(60px); pointer-events: none; }
-        .ambient-glow-2 { position: absolute; bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0,212,136,0.03) 0%, transparent 60%); border-radius: 50%; filter: blur(80px); pointer-events: none; }
- 
+        .ambient-glow-1 { position: absolute; top: -15%; left: -12%; width: 52vw; height: 52vw; background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 62%); border-radius: 50%; filter: blur(80px); pointer-events: none; }
+        .ambient-glow-2 { position: absolute; bottom: -18%; right: -12%; width: 45vw; height: 45vw; background: radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 65%); border-radius: 50%; filter: blur(90px); pointer-events: none; }
+        .auth-top-brand { position: fixed; top: 24px; left: 28px; z-index: 30; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.04em; opacity: 0.9; transition: opacity 0.2s; }
+        .auth-top-brand:hover { opacity: 1; }
         .auth-error { color: #f87171; font-size: 0.88rem; text-align: center; padding: 4px 0; }
       `}</style>
+
+      <Link href="/" className="auth-top-brand">
+        <img src="/logo.png" alt="Palama" width={22} height={22} style={{ objectFit: "contain" }} />
+        <span>PALAMA</span>
+      </Link>
 
       {/* Left Panel - Brand */}
       <div className="auth-left">
@@ -223,7 +229,7 @@ function LoginPageContent() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Palama<br />Persona
+          Palama<br />Co-Worker
         </motion.div>
       </div>
 

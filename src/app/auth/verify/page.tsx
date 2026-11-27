@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, Mail, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 function safeNext(raw: string | null): string {
@@ -15,8 +15,20 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#000", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontFamily: "sans-serif" }}>
-          Loading...
+        <div
+          style={{
+            display: "flex",
+            minHeight: "100vh",
+            width: "100%",
+            background: "#000",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#71717a",
+            fontFamily: "var(--font-geist-sans), 'Inter', sans-serif",
+            fontSize: "0.9rem",
+          }}
+        >
+          Checking session...
         </div>
       }
     >
@@ -50,7 +62,6 @@ function VerifyPageContent() {
         setError(null);
       }
       try {
-        // Refresh / read authoritative server user state
         const res = await fetch("/api/waitlist/status", { cache: "no-store" });
         if (res.ok) {
           const st = await res.json();
@@ -68,7 +79,7 @@ function VerifyPageContent() {
           return;
         }
         if (manual) {
-          setNotice("Still waiting for confirmation — open the verification link in your inbox, or click Sign in if you confirmed on another device.");
+          setNotice("Awaiting link confirmation — check your inbox or spam folder, or sign in if you verified from another browser.");
         }
       } catch {
         if (manual) {
@@ -81,7 +92,7 @@ function VerifyPageContent() {
     [nextPath, onboardingDest, router, supabase]
   );
 
-  // Poll automatically every 3 seconds + on window focus (catches confirmation opened in another browser tab)
+  // Poll automatically every 3 seconds + on window focus (catches link clicked in another tab)
   useEffect(() => {
     checkVerificationStatus(false);
     const id = setInterval(() => checkVerificationStatus(false), 3000);
@@ -134,111 +145,299 @@ function VerifyPageContent() {
   const loginUrl = `/auth/login?next=${encodeURIComponent(onboardingDest)}`;
 
   return (
-    <div className="auth-split">
+    <div className="palama-verify-split">
       <style>{`
         * { box-sizing: border-box; }
         body { background: #000; margin: 0; color: #ededed; }
-        .auth-split { display: flex; min-height: 100vh; width: 100%; background: #000; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        .auth-left { display: none; flex: 1.2; position: relative; overflow: hidden; border-right: 1px solid rgba(255,255,255,0.05); align-items: center; justify-content: flex-start; padding-left: 8vw; background: #000; }
-        @media (min-width: 992px) { .auth-left { display: flex; } }
-        .auth-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; position: relative; background: #000; }
-        .massive-brand-text { font-size: clamp(5rem, 12vw, 14rem); font-weight: 800; line-height: 0.85; letter-spacing: -0.04em; color: transparent; background: linear-gradient(180deg, #52525b 0%, #18181b 100%); -webkit-background-clip: text; background-clip: text; user-select: none; pointer-events: none; position: relative; z-index: 10; }
-        .auth-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 10; }
-        .verify-icon-badge { width: 52px; height: 52px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; color: #fff; }
-        .auth-title { font-size: 1.7rem; font-weight: 600; color: #fff; text-align: center; margin: 0 0 8px; letter-spacing: -0.02em; }
-        .auth-sub { font-size: 0.94rem; color: #a1a1aa; text-align: center; margin: 0; line-height: 1.55; }
-        .email-pill { display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-weight: 600; font-size: 0.86rem; word-break: break-all; }
-        .steps-box { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.025); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 0.86rem; color: #d4d4d8; }
-        .step-row { display: flex; align-items: flex-start; gap: 10px; line-height: 1.45; }
-        .step-num { width: 20px; height: 20px; border-radius: 999px; background: rgba(255,255,255,0.12); color: #fff; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #fff; color: #000; font-size: 0.94rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-        .auth-btn:hover { background: #e4e4e7; transform: translateY(-1px); }
-        .auth-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-        .auth-btn-outline { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-size: 0.9rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
-        .auth-btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
-        .auth-btn-outline:disabled { opacity: 0.55; cursor: not-allowed; }
-        .auth-error { color: #f87171; font-size: 0.86rem; text-align: center; }
-        .auth-notice { color: #a1a1aa; font-size: 0.84rem; text-align: center; line-height: 1.45; }
-        .auth-success { color: #34d399; font-size: 0.86rem; text-align: center; }
-        .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(46,123,255,0.05) 0%, transparent 60%); border-radius: 50%; filter: blur(60px); pointer-events: none; }
-        .ambient-glow-2 { position: absolute; bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0,212,136,0.03) 0%, transparent 60%); border-radius: 50%; filter: blur(80px); pointer-events: none; }
+        .palama-verify-split {
+          display: flex;
+          min-height: 100vh;
+          width: 100%;
+          background: #000;
+          font-family: var(--font-geist-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          position: relative;
+        }
+        .pv-brand-top {
+          position: fixed;
+          top: 24px;
+          left: 28px;
+          z-index: 30;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+          color: #fff;
+          font-weight: 600;
+          font-size: 0.95rem;
+          letter-spacing: 0.04em;
+          opacity: 0.9;
+          transition: opacity 0.2s;
+        }
+        .pv-brand-top:hover { opacity: 1; }
+        .pv-left {
+          display: none;
+          flex: 1.15;
+          position: relative;
+          overflow: hidden;
+          border-right: 1px solid rgba(255,255,255,0.06);
+          align-items: center;
+          justify-content: flex-start;
+          padding-left: 8vw;
+          background: #000;
+        }
+        @media (min-width: 992px) { .pv-left { display: flex; } }
+        .pv-glow {
+          position: absolute;
+          top: -15%;
+          left: -12%;
+          width: 50vw;
+          height: 50vw;
+          background: radial-gradient(circle, rgba(255,255,255,0.035) 0%, transparent 62%);
+          border-radius: 50%;
+          filter: blur(80px);
+          pointer-events: none;
+        }
+        .pv-massive {
+          font-size: clamp(5rem, 11.5vw, 13.5rem);
+          font-weight: 800;
+          line-height: 0.86;
+          letter-spacing: -0.045em;
+          color: transparent;
+          background: linear-gradient(180deg, #52525b 0%, #141417 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          user-select: none;
+          pointer-events: none;
+          position: relative;
+          z-index: 2;
+        }
+        .pv-right {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 28px;
+          background: #000;
+        }
+        .pv-panel {
+          width: 100%;
+          max-width: 400px;
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+        .pv-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: #71717a;
+        }
+        .pv-pulse-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #fff;
+          box-shadow: 0 0 0 0 rgba(255,255,255,0.45);
+          animation: pv-pulse 2s infinite;
+        }
+        @keyframes pv-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); opacity: 1; }
+          70% { box-shadow: 0 0 0 6px rgba(255,255,255,0); opacity: 0.6; }
+          100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); opacity: 1; }
+        }
+        .pv-title {
+          font-size: clamp(1.75rem, 3vw, 2.15rem);
+          font-weight: 600;
+          color: #fff;
+          letter-spacing: -0.035em;
+          line-height: 1.12;
+          margin: 10px 0 10px;
+        }
+        .pv-sub {
+          font-size: 0.94rem;
+          color: #a1a1aa;
+          line-height: 1.6;
+          margin: 0;
+        }
+        .pv-dossier {
+          border-top: 1px solid rgba(255,255,255,0.1);
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          padding: 16px 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .pv-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          font-size: 0.84rem;
+        }
+        .pv-row-label { color: #71717a; }
+        .pv-row-val {
+          color: #f4f4f5;
+          font-weight: 500;
+          text-align: right;
+          word-break: break-all;
+        }
+        .pv-btn-primary {
+          width: 100%;
+          padding: 13px 20px;
+          border-radius: 9999px;
+          border: none;
+          background: #fff;
+          color: #000;
+          font-size: 0.92rem;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          transition: transform 0.2s, background 0.2s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          text-decoration: none;
+        }
+        .pv-btn-primary:hover:not(:disabled) { background: #e4e4e7; transform: translateY(-1px); }
+        .pv-btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+        .pv-btn-outline {
+          width: 100%;
+          padding: 12px 18px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255,255,255,0.14);
+          background: transparent;
+          color: #e4e4e7;
+          font-size: 0.88rem;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s, color 0.2s;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          text-decoration: none;
+        }
+        .pv-btn-outline:hover:not(:disabled) {
+          background: rgba(255,255,255,0.05);
+          border-color: rgba(255,255,255,0.3);
+          color: #fff;
+        }
+        .pv-btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pv-msg { font-size: 0.84rem; color: #a1a1aa; line-height: 1.5; }
+        .pv-msg-err { font-size: 0.84rem; color: #f87171; line-height: 1.5; }
+        .pv-msg-ok { font-size: 0.84rem; color: #f4f4f5; line-height: 1.5; }
       `}</style>
 
-      <div className="auth-left">
-        <div className="ambient-glow-1" />
-        <div className="ambient-glow-2" />
+      <Link href="/" className="pv-brand-top">
+        <img src="/logo.png" alt="Palama" width={22} height={22} style={{ objectFit: "contain" }} />
+        <span>PALAMA</span>
+      </Link>
+
+      <div className="pv-left">
+        <div className="pv-glow" />
         <motion.div
-          className="massive-brand-text"
-          initial={{ opacity: 0, x: -30 }}
+          className="pv-massive"
+          initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.75, ease: "easeOut" }}
         >
-          Confirm<br />Account
+          Palama
+          <br />
+          Co-Worker
         </motion.div>
       </div>
 
-      <div className="auth-right">
+      <div className="pv-right">
         <motion.div
-          className="auth-card"
-          initial={{ opacity: 0, y: 20 }}
+          className="pv-panel"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div style={{ textAlign: "center" }}>
-            <div className="verify-icon-badge">
-              {verified ? <CheckCircle2 size={24} color="#34d399" /> : <Mail size={24} />}
+          <div>
+            <div className="pv-eyebrow">
+              <span className="pv-pulse-dot" />
+              <span>{verified ? "Identity Confirmed" : "Step 01 — Confirmation"}</span>
             </div>
-            <h1 className="auth-title">{verified ? "Email confirmed!" : "Check your email"}</h1>
-            <p className="auth-sub">
-              We sent a confirmation <strong>link</strong> to
+            <h1 className="pv-title">{verified ? "Email confirmed." : "Confirm your email."}</h1>
+            <p className="pv-sub">
+              {verified
+                ? "Continuing to your workspace setup..."
+                : "Open the confirmation link sent to your inbox. This window advances automatically the moment you verify."}
             </p>
-            {email ? <span className="email-pill">{email}</span> : <span className="email-pill">your email address</span>}
           </div>
 
-          <div className="steps-box">
-            <div className="step-row">
-              <span className="step-num">1</span>
-              <span>Open the verification email from Palama in your inbox (check spam/promotions if needed).</span>
+          <div className="pv-dossier">
+            <div className="pv-row">
+              <span className="pv-row-label">Destination</span>
+              <span className="pv-row-val">{email || "Your registered email"}</span>
             </div>
-            <div className="step-row">
-              <span className="step-num">2</span>
-              <span>Click the <strong>Confirm your email</strong> link inside the message — no code needed.</span>
+            <div className="pv-row">
+              <span className="pv-row-label">Method</span>
+              <span className="pv-row-val">Confirmation link (no code)</span>
             </div>
-            <div className="step-row">
-              <span className="step-num">3</span>
-              <span>Once confirmed, you will continue automatically to complete your quick waitlist profile.</span>
+            <div className="pv-row">
+              <span className="pv-row-label">Status</span>
+              <span className="pv-row-val">{verified ? "Confirmed" : "Listening for confirmation"}</span>
             </div>
           </div>
 
-          {error && <div className="auth-error">{error}</div>}
-          {resent && <div className="auth-success">A new verification link has been sent!</div>}
-          {notice && <div className="auth-notice">{notice}</div>}
+          {error && <div className="pv-msg-err">{error}</div>}
+          {resent && <div className="pv-msg-ok">A fresh confirmation link has been dispatched.</div>}
+          {notice && <div className="pv-msg">{notice}</div>}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <button
               type="button"
-              className="auth-btn"
+              className="pv-btn-primary"
               onClick={() => checkVerificationStatus(true)}
               disabled={checking || verified}
             >
-              <RefreshCw size={15} className={checking ? "animate-spin" : ""} />
-              {verified ? "Redirecting..." : checking ? "Checking confirmation..." : "I clicked the link — Continue"}
+              {checking ? (
+                <>
+                  <RefreshCw size={15} className="animate-spin" />
+                  <span>Checking confirmation...</span>
+                </>
+              ) : verified ? (
+                <span>Redirecting...</span>
+              ) : (
+                <>
+                  <span>I clicked the link — Continue</span>
+                  <ArrowRight size={15} />
+                </>
+              )}
             </button>
 
             {email && (
               <button
                 type="button"
-                className="auth-btn-outline"
+                className="pv-btn-outline"
                 onClick={handleResend}
                 disabled={cooldown > 0}
               >
-                {cooldown > 0 ? `Resend link in ${cooldown}s` : "Resend verification link"}
+                {cooldown > 0 ? `Resend link in ${cooldown}s` : "Resend confirmation link"}
               </button>
             )}
 
-            <Link href={loginUrl} className="auth-btn-outline">
-              Verified on another device? Sign in
-            </Link>
+            <div style={{ textAlign: "center", paddingTop: 6 }}>
+              <Link
+                href={loginUrl}
+                style={{
+                  fontSize: "0.84rem",
+                  color: "#71717a",
+                  textDecoration: "none",
+                  transition: "color 0.2s",
+                }}
+              >
+                Verified on another device? <span style={{ color: "#e4e4e7", textDecoration: "underline" }}>Sign in</span>
+              </Link>
+            </div>
           </div>
         </motion.div>
       </div>

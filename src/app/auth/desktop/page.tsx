@@ -123,17 +123,23 @@ export default function DesktopAuthPage() {
         .auth-card { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
         .auth-title { font-size: 1.75rem; font-weight: 600; color: #fff; text-align: center; margin: 0 0 8px; letter-spacing: -0.02em; }
         .auth-sub { font-size: 0.95rem; color: #a1a1aa; text-align: center; margin: 0; }
-        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #fff; color: #000; font-size: 0.95rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .auth-btn { width: 100%; padding: 12px 18px; border-radius: 9999px; border: none; background: #fff; color: #000; font-size: 0.94rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .auth-btn:hover { background: #e4e4e7; transform: translateY(-1px); }
         .auth-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-        .auth-btn-outline { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-size: 0.95rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+        .auth-btn-outline { width: 100%; padding: 12px 18px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-size: 0.94rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
         .auth-btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
-        .auth-note { font-size: 0.85rem; color: #71717a; text-align: center; margin: 0; line-height: 1.5; }
-        .waitlist-banner { border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px 14px; font-size: 0.84rem; color: #d4d4d8; line-height: 1.5; text-align: center; }
+        .auth-note { font-size: 0.84rem; color: #71717a; text-align: center; margin: 0; line-height: 1.55; }
+        .waitlist-banner { border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 14px 0; font-size: 0.85rem; color: #d4d4d8; line-height: 1.55; text-align: center; }
+        .auth-top-brand { position: fixed; top: 24px; left: 28px; z-index: 30; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.04em; opacity: 0.9; }
       `}</style>
 
+      <Link href="/" className="auth-top-brand">
+        <img src="/logo.png" alt="Palama" width={22} height={22} style={{ objectFit: "contain" }} />
+        <span>PALAMA</span>
+      </Link>
+
       <div className="auth-left">
-        <div className="massive-brand-text">Palama<br />Desktop</div>
+        <div className="massive-brand-text">Palama<br />Co-Worker</div>
       </div>
 
       <div className="auth-right">

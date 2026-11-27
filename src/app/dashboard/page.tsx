@@ -387,78 +387,310 @@ export default function DashboardPage() {
     const isRejected = waitlistState?.status === "rejected";
     const profile = waitlistState?.profile;
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#09090b", color: "#fafafa", padding: "28px 18px", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
-        <div style={{ width: "100%", maxWidth: 460, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 18, padding: "32px 28px", textAlign: "center" }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-            <Clock size={24} />
-          </div>
-          <h1 style={{ fontSize: "1.55rem", fontWeight: 700, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
-            {isRejected ? "Waitlist update" : "You're in the waitlist"}
-          </h1>
-          <p style={{ fontSize: "0.92rem", color: "#a1a1aa", margin: "0 0 20px", lineHeight: 1.55 }}>
-            {isRejected
-              ? "Thank you for applying for Palama Co-Worker. Your account is not approved for this wave."
-              : "Thanks for verifying your account and sharing how you plan to use Palama. When we open your spot, you will receive an instant notification on your computer."}
-          </p>
+      <div
+        style={{
+          minHeight: "100vh",
+          width: "100%",
+          background: "radial-gradient(ellipse 70% 50% at 20% 0%, rgba(255,255,255,0.045) 0%, #000000 65%)",
+          color: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "var(--font-geist-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        }}
+      >
+        <style>{`
+          .pw-gate-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 64px;
+            align-items: center;
+            width: 100%;
+            max-width: 1040px;
+            margin: auto;
+            padding: 48px 32px 72px;
+          }
+          @media (max-width: 860px) {
+            .pw-gate-grid {
+              grid-template-columns: 1fr;
+              gap: 36px;
+              padding: 36px 20px 56px;
+            }
+          }
+          .pw-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #fff;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(255,255,255,0.5);
+            animation: pw-pulse-ring 2.2s infinite;
+          }
+          @keyframes pw-pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.45); opacity: 1; }
+            70% { box-shadow: 0 0 0 7px rgba(255,255,255,0); opacity: 0.65; }
+            100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); opacity: 1; }
+          }
+        `}</style>
 
-          <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 16px", marginBottom: 20, textAlign: "left", display: "flex", flexDirection: "column", gap: 8, fontSize: "0.84rem", background: "rgba(255,255,255,0.02)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-              <span style={{ color: "#71717a" }}>Account</span>
-              <span style={{ color: "#fff", fontWeight: 500 }}>{user?.email}</span>
+        {/* Minimal Palama Top Bar */}
+        <header
+          style={{
+            height: 68,
+            padding: "0 28px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Link
+            href="/"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              color: "#fff",
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              letterSpacing: "0.04em",
+            }}
+          >
+            <img src="/logo.png" alt="Palama" width={22} height={22} style={{ objectFit: "contain" }} />
+            <span>PALAMA</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.14)",
+              color: "#d4d4d8",
+              borderRadius: 9999,
+              padding: "7px 14px",
+              fontSize: "0.82rem",
+              fontWeight: 500,
+              cursor: "pointer",
+            }}
+          >
+            <LogOut size={13} />
+            <span>Sign out</span>
+          </button>
+        </header>
+
+        {/* Editorial Sanctuary Stage */}
+        <main className="pw-gate-grid">
+          <div>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 9,
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "#71717a",
+                marginBottom: 18,
+              }}
+            >
+              {!isRejected && <span className="pw-pulse" />}
+              <span>{isRejected ? "Early Access Update" : "Early Access Queue"}</span>
             </div>
-            {profile?.role && (
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ color: "#71717a" }}>Profile</span>
-                <span style={{ color: "#e4e4e7", textTransform: "capitalize" }}>
-                  {profile.role === "other" && profile.role_other ? profile.role_other : profile.role} • {profile.usage_type === "team" ? `Team (${profile.team_size || "2+"})` : "Solo"}
-                </span>
-              </div>
-            )}
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-              <span style={{ color: "#71717a" }}>Status</span>
-              <span style={{ color: isRejected ? "#f87171" : "#fbbf24", fontWeight: 600 }}>
-                {isRejected ? "Not Approved" : "Waiting for Approval"}
+
+            <h1
+              style={{
+                fontSize: "clamp(2.3rem, 4.6vw, 3.6rem)",
+                fontWeight: 600,
+                lineHeight: 1.04,
+                letterSpacing: "-0.045em",
+                color: "#ffffff",
+                margin: "0 0 18px",
+              }}
+            >
+              {isRejected ? (
+                <>Not selected<br />for this wave.</>
+              ) : (
+                <>You&apos;re in the<br />waitlist.</>
+              )}
+            </h1>
+
+            <p
+              style={{
+                fontSize: "1rem",
+                lineHeight: 1.65,
+                color: "#a1a1aa",
+                maxWidth: 460,
+                margin: "0 0 32px",
+              }}
+            >
+              {isRejected
+                ? "Your application is currently closed for this cohort. Thank you for your interest in Palama Co-Worker."
+                : "We admit seats in deliberate waves to preserve execution speed and reliability. Keep Palama Desktop installed — your computer will notify you the moment access unlocks."}
+            </p>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+              <button
+                type="button"
+                disabled={checkingWaitlist}
+                onClick={async () => {
+                  setCheckingWaitlist(true);
+                  try {
+                    const r = await fetch("/api/waitlist/status", { cache: "no-store" });
+                    if (r.ok) setWaitlistState(await r.json());
+                  } finally {
+                    setCheckingWaitlist(false);
+                  }
+                }}
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: 9999,
+                  border: "none",
+                  background: "#ffffff",
+                  color: "#09090b",
+                  fontWeight: 600,
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <RefreshCw size={14} className={checkingWaitlist ? "animate-spin" : ""} />
+                <span>{checkingWaitlist ? "Checking..." : "Refresh status"}</span>
+              </button>
+
+              <Link
+                href="/download"
+                style={{
+                  padding: "12px 22px",
+                  borderRadius: 9999,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "transparent",
+                  color: "#ffffff",
+                  fontWeight: 500,
+                  fontSize: "0.9rem",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Download size={14} />
+                <span>Download desktop app</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Architectural Dossier */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 18,
+              padding: "28px 26px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingBottom: 18,
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                marginBottom: 18,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: "#71717a",
+                }}
+              >
+                Applicant Dossier
+              </span>
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  fontWeight: 600,
+                  color: isRejected ? "#a1a1aa" : "#ffffff",
+                  padding: "4px 10px",
+                  borderRadius: 9999,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "rgba(255,255,255,0.04)",
+                }}
+              >
+                {isRejected ? "Closed" : "Reserved"}
               </span>
             </div>
+
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {[
+                { label: "Account", value: user?.email || "—" },
+                ...(profile?.full_name ? [{ label: "Name", value: profile.full_name }] : []),
+                ...(profile?.role
+                  ? [
+                      {
+                        label: "Discipline",
+                        value:
+                          profile.role === "other" && profile.role_other
+                            ? profile.role_other
+                            : profile.role,
+                      },
+                    ]
+                  : []),
+                ...(profile?.usage_type
+                  ? [
+                      {
+                        label: "Workspace",
+                        value:
+                          profile.usage_type === "team"
+                            ? `Team (${profile.team_size || "2+"} seats)`
+                            : "Individual",
+                      },
+                    ]
+                  : []),
+                {
+                  label: "Access State",
+                  value: isRejected ? "Not Approved" : "In Review",
+                },
+              ].map((item, idx, arr) => (
+                <div
+                  key={item.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    padding: "13px 0",
+                    borderBottom: idx < arr.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                    fontSize: "0.86rem",
+                  }}
+                >
+                  <span style={{ color: "#71717a" }}>{item.label}</span>
+                  <span
+                    style={{
+                      color: "#f4f4f5",
+                      fontWeight: 500,
+                      textTransform: item.label === "Discipline" ? "capitalize" : "none",
+                      textAlign: "right",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button
-              type="button"
-              disabled={checkingWaitlist}
-              onClick={async () => {
-                setCheckingWaitlist(true);
-                try {
-                  const r = await fetch("/api/waitlist/status", { cache: "no-store" });
-                  if (r.ok) setWaitlistState(await r.json());
-                } finally {
-                  setCheckingWaitlist(false);
-                }
-              }}
-              style={{ width: "100%", padding: "11px 16px", borderRadius: 10, border: "none", background: "#fff", color: "#000", fontWeight: 600, fontSize: "0.92rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              <RefreshCw size={15} className={checkingWaitlist ? "animate-spin" : ""} />
-              {checkingWaitlist ? "Checking..." : "Refresh status"}
-            </button>
-
-            <Link
-              href="/download"
-              style={{ width: "100%", padding: "11px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.16)", background: "transparent", color: "#fff", fontWeight: 500, fontSize: "0.9rem", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              <Download size={15} />
-              Download Palama Desktop
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={{ width: "100%", padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.08)", color: "#fca5a5", fontWeight: 500, fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              <LogOut size={14} />
-              Sign out
-            </button>
-          </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -1264,6 +1496,18 @@ export default function DashboardPage() {
                 </div>
                 <span>Settings</span>
               </button>
+
+              {waitlistState?.isAdmin && (
+                <Link
+                  href="/admin"
+                  className="jobgio-nav-btn"
+                >
+                  <div className="jobgio-nav-icon-circle">
+                    <ShieldCheck size={15} />
+                  </div>
+                  <span>Admin Console</span>
+                </Link>
+              )}
             </nav>
           </div>
 

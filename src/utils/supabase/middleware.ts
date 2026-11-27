@@ -12,7 +12,7 @@ export async function updateSession(request: NextRequest) {
   // avoids hammering Supabase Auth on unauthenticated requests during traffic spikes.
   const hasSessionCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
   if (!hasSessionCookie) {
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding') || pathname.startsWith('/admin')) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       url.searchParams.set('next', pathname + (request.nextUrl.search || ''))
@@ -89,8 +89,8 @@ export async function updateSession(request: NextRequest) {
     console.error('Supabase fetch failed in middleware:', err?.message || err)
   }
 
-  // Protect /dashboard, /onboarding and nested routes
-  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) && !user) {
+  // Protect /dashboard, /admin, /onboarding and nested routes
+  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding') || pathname.startsWith('/admin')) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     url.searchParams.set('next', pathname + (request.nextUrl.search || ''))

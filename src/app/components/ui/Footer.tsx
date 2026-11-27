@@ -41,7 +41,7 @@ const footerColumns = [
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname && pathname.startsWith("/dashboard")) {
+  if (pathname && (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding") || pathname.startsWith("/auth") || pathname.startsWith("/admin"))) {
     return null;
   }
 

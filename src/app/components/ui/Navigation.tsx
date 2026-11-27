@@ -174,7 +174,7 @@ export function Navigation() {
   const showMarketingNav = !accountEmail || !isAccountArea;
   const isLightHeroNav = pathname === "/" && !scrolled && !activeDropdown && !mobileMenuOpen;
 
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname && (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding") || pathname.startsWith("/auth") || pathname.startsWith("/admin"))) {
     return null;
   }
 
