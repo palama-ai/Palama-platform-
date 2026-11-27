@@ -223,8 +223,8 @@ export default function PalamaHero() {
             position: "relative",
             width: "100%",
             maxWidth: 1120,
-            height: "clamp(430px, 50vw, 540px)",
-            margin: "20px auto 0",
+            height: "clamp(480px, 56vw, 620px)",
+            margin: "14px auto 0",
           }}
         >
           {/* Curved Hairline Orbit Connectors (Desktop) */}
@@ -288,7 +288,7 @@ export default function PalamaHero() {
               position: "absolute",
               left: 0,
               right: 0,
-              bottom: 0,
+              bottom: -6,
               display: "flex",
               justifyContent: "center",
               alignItems: "flex-end",
@@ -301,8 +301,8 @@ export default function PalamaHero() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: "clamp(320px, 42vw, 490px)",
-                height: "clamp(380px, 47vw, 515px)",
+                width: "clamp(420px, 56vw, 660px)",
+                height: "clamp(470px, 60vw, 650px)",
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "center",
@@ -374,8 +374,8 @@ export default function PalamaHero() {
             className="hero-card-horizon"
             style={{
               position: "absolute",
-              left: "calc(50% - 310px)",
-              top: 215,
+              left: "calc(50% - 355px)",
+              top: 235,
               zIndex: 9,
             }}
           >
@@ -413,8 +413,8 @@ export default function PalamaHero() {
             className="hero-card-focus"
             style={{
               position: "absolute",
-              left: "calc(50% - 252px)",
-              top: 128,
+              left: "calc(50% - 290px)",
+              top: 138,
               zIndex: 18,
             }}
           >
@@ -465,8 +465,8 @@ export default function PalamaHero() {
             className="hero-card-memory"
             style={{
               position: "absolute",
-              left: "calc(50% - 210px)",
-              top: 266,
+              left: "calc(50% - 252px)",
+              top: 296,
               zIndex: 22,
             }}
           >
@@ -517,8 +517,8 @@ export default function PalamaHero() {
             className="hero-card-execute"
             style={{
               position: "absolute",
-              left: "calc(50% + 90px)",
-              top: 176,
+              left: "calc(50% + 128px)",
+              top: 192,
               zIndex: 20,
             }}
           >
@@ -569,8 +569,8 @@ export default function PalamaHero() {
             className="hero-card-orb"
             style={{
               position: "absolute",
-              left: "calc(50% + 108px)",
-              top: 294,
+              left: "calc(50% + 145px)",
+              top: 324,
               zIndex: 16,
             }}
           >
