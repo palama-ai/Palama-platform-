@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Cpu, Globe, ShieldCheck, Command, Plus } from "lucide-react";
+import { ArrowRight, Cpu, Globe, ShieldCheck, Command, Plus } from "lucide-react";
 
 function FourPointStar({ size = 12, color = "#0c0c0f" }: { size?: number; color?: string }) {
   return (
@@ -188,50 +188,6 @@ export default function PalamaHero() {
             >
               <span>Download free</span>
               <ArrowRight size={14} />
-            </Link>
-
-            <Link
-              href="/demo"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "rgba(255, 255, 255, 0.9)",
-                color: "#0c0c0f",
-                padding: "10px 20px",
-                borderRadius: 9999,
-                fontSize: "0.86rem",
-                fontWeight: 550,
-                textDecoration: "none",
-                letterSpacing: "-0.01em",
-                border: "1px solid rgba(12, 12, 15, 0.12)",
-                boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
-                transition: "transform 0.2s ease, background 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.background = "#ffffff";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.9)";
-              }}
-            >
-              <span
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "#0c0c0f",
-                  color: "#fff",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Play size={8} fill="#fff" style={{ marginLeft: 1 }} />
-              </span>
-              <span>Explore features</span>
             </Link>
           </motion.div>
         </div>
