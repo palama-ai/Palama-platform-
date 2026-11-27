@@ -86,31 +86,6 @@ export default function PalamaHero() {
             zIndex: 25,
           }}
         >
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "5px 13px",
-              borderRadius: 9999,
-              background: "rgba(255, 255, 255, 0.78)",
-              border: "1px solid rgba(12, 12, 15, 0.08)",
-              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
-              fontSize: "0.72rem",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "#3f3f46",
-              marginBottom: 14,
-            }}
-          >
-            <FourPointStar size={9} color="#0c0c0f" />
-            <span>Palama Co-Worker 2.0</span>
-          </motion.div>
-
           <motion.h1
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
