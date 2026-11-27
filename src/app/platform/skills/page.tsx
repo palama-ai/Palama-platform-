@@ -30,7 +30,7 @@ export default function PlatformSkillsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 48 }}>
             <h2 style={{ textAlign: "center", marginBottom: 32 }}>Featured Skills</h2>
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            <div className="r-grid-3">
               {[
                 { name: "Terminal Access", desc: "Allow the agent to run bash scripts safely.", type: "Core" },
                 { name: "Postgres Reader", desc: "Execute SQL queries directly against your DB.", type: "Data" },

@@ -216,8 +216,19 @@ export default function TokensPage() {
             position: relative;
             flex-direction: row;
             flex-wrap: wrap;
-            padding: 16px 20px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
           }
+          .jobgio-logo { margin-bottom: 10px; }
+          .jobgio-nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+          .jobgio-nav-btn { width: auto; padding: 8px 14px; gap: 8px; }
+        }
+        @media (max-width: 640px) {
+          .jobgio-main { padding: 16px 14px 48px !important; gap: 16px !important; }
+          .white-card { padding: 18px 16px !important; border-radius: 20px !important; }
+          .modal-box { padding: 20px 18px !important; border-radius: 22px !important; }
         }
 
         .jobgio-logo {
@@ -570,7 +581,7 @@ export default function TokensPage() {
       {/* MAIN CONTENT */}
       <main className="jobgio-main">
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.03em", color: "#111", margin: 0 }}>
               Tokens Analytics & Quota
@@ -633,7 +644,7 @@ export default function TokensPage() {
             <h3 className="card-heading">Weekly Quota Consumption</h3>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, padding: "12px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24, padding: "12px 8px" }}>
             {/* The SVG Donut Gauge with Dynamic Alert Color */}
             <div style={{ position: "relative", width: 140, height: 140, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, margin: "0 auto" }}>
               <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: "rotate(-90deg)" }}>

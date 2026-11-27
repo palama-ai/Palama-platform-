@@ -11,7 +11,8 @@ export type DesktopServerConfig = {
 }
 
 let cachedConfig: { at: number; value: DesktopServerConfig } | null = null
-const CONFIG_TTL_MS = 45 * 1000
+let inFlightConfig: Promise<DesktopServerConfig> | null = null
+const CONFIG_TTL_MS = 60 * 1000
 
 function parsePositiveInt(raw: unknown): number | null {
   if (raw === null || raw === undefined || raw === '') return null
@@ -101,41 +102,56 @@ export async function getDesktopServerConfig(force = false): Promise<DesktopServ
   if (!force && cachedConfig && Date.now() - cachedConfig.at < CONFIG_TTL_MS) {
     return cachedConfig.value
   }
-
-  const db = await readSupabasePlatformConfig()
-
-  const quotaFromDb = parsePositiveInt(db.weekly_token_quota)
-  const quotaFromEnv =
-    parsePositiveInt(process.env.WEEKLY_TOKEN_QUOTA) ??
-    parsePositiveInt(process.env.TOKEN_QUOTA_LIMIT)
-  const weekly_token_quota = quotaFromDb ?? quotaFromEnv ?? DEFAULT_WEEKLY_TOKEN_QUOTA
-
-  const min_supported_version = String(
-    db.min_supported_version ?? process.env.MIN_SUPPORTED_VERSION ?? ''
-  ).trim()
-
-  const dbBlocked = parseVersionList(db.blocked_versions)
-  const envBlocked = parseVersionList(process.env.BLOCKED_VERSIONS)
-  const blocked_versions = dbBlocked.length > 0 ? dbBlocked : envBlocked
-
-  const force_update_message = String(
-    db.force_update_message ?? process.env.FORCE_UPDATE_MESSAGE ?? ''
-  ).trim()
-
-  const models =
-    parseModelsList(db.models) ??
-    parseModelsList(process.env.DESKTOP_MODELS) ??
-    parseModelsList(process.env.EXTRA_MODELS)
-
-  const value: DesktopServerConfig = {
-    weekly_token_quota,
-    min_supported_version,
-    blocked_versions,
-    force_update_message,
-    models,
+  if (!force && inFlightConfig) {
+    return inFlightConfig
   }
-  cachedConfig = { at: Date.now(), value }
-  return value
+
+  const load = (async (): Promise<DesktopServerConfig> => {
+    try {
+      const db = await readSupabasePlatformConfig()
+
+      const quotaFromDb = parsePositiveInt(db.weekly_token_quota)
+      const quotaFromEnv =
+        parsePositiveInt(process.env.WEEKLY_TOKEN_QUOTA) ??
+        parsePositiveInt(process.env.TOKEN_QUOTA_LIMIT)
+      const weekly_token_quota = quotaFromDb ?? quotaFromEnv ?? DEFAULT_WEEKLY_TOKEN_QUOTA
+
+      const min_supported_version = String(
+        db.min_supported_version ?? process.env.MIN_SUPPORTED_VERSION ?? ''
+      ).trim()
+
+      const dbBlocked = parseVersionList(db.blocked_versions)
+      const envBlocked = parseVersionList(process.env.BLOCKED_VERSIONS)
+      const blocked_versions = dbBlocked.length > 0 ? dbBlocked : envBlocked
+
+      const force_update_message = String(
+        db.force_update_message ?? process.env.FORCE_UPDATE_MESSAGE ?? ''
+      ).trim()
+
+      const models =
+        parseModelsList(db.models) ??
+        parseModelsList(process.env.DESKTOP_MODELS) ??
+        parseModelsList(process.env.EXTRA_MODELS)
+
+      const value: DesktopServerConfig = {
+        weekly_token_quota,
+        min_supported_version,
+        blocked_versions,
+        force_update_message,
+        models,
+      }
+      cachedConfig = { at: Date.now(), value }
+      return value
+    } catch (err) {
+      if (cachedConfig) return cachedConfig.value
+      throw err
+    } finally {
+      inFlightConfig = null
+    }
+  })()
+
+  inFlightConfig = load
+  return load
 }
 
 export async function getEffectiveWeeklyQuotaLimit(): Promise<number> {

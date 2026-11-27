@@ -8,7 +8,7 @@ const searchData = [
   { group: "Products", items: [{ label: "Palama Products", href: "/products" }, { label: "Download App", href: "/download" }] },
   { group: "Platform", items: [{ label: "Dashboard", href: "/dashboard" }, { label: "API Docs", href: "/developers/docs" }] },
   { group: "Company", items: [{ label: "About Palama", href: "/company/about" }, { label: "Newsroom", href: "/news" }, { label: "Contact Sales", href: "/contact/sales" }] },
-  { group: "Resources", items: [{ label: "Blog", href: "/resources/blog" }, { label: "Use Cases", href: "/use-cases" }] }
+  { group: "Resources", items: [{ label: "Use Cases", href: "/use-cases" }, { label: "Help Center", href: "/support/help" }] }
 ];
 
 export default function CommandPalette() {
@@ -26,8 +26,13 @@ export default function CommandPalette() {
         setIsOpen(false);
       }
     };
+    const handleOpenSearch = () => setIsOpen(true);
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("palama:open-search", handleOpenSearch);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("palama:open-search", handleOpenSearch);
+    };
   }, []);
 
   const filteredData = query
@@ -44,7 +49,7 @@ export default function CommandPalette() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: "10vh" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: "10vh", paddingLeft: 16, paddingRight: 16 }}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

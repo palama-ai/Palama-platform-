@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <div style={{ minHeight: "100vh" }}>
       {/* Hero */}
-      <section style={{ paddingTop: "calc(var(--nav-height) + 120px)", paddingBottom: 100 }}>
+      <section style={{ paddingTop: "calc(var(--nav-height) + 72px)", paddingBottom: 64 }}>
         <div className="page-container" style={{ maxWidth: 960 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
@@ -35,7 +35,7 @@ export default function Page() {
       {/* Bento Feature Block */}
       <section style={{ background: "#080808", paddingTop: 80, paddingBottom: 80, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+          <div className="r-grid-2" style={{ marginBottom: 24 }}>
             <BentoItem>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 500, marginBottom: 12 }}>What is SDKs?</h3>
               <p style={{ color: "#888", lineHeight: 1.6, fontSize: "0.9rem" }}>Official client libraries for Python, Node.js, Go, and Rust.</p>
@@ -45,7 +45,7 @@ export default function Page() {
               <p style={{ color: "#888", lineHeight: 1.6, fontSize: "0.9rem" }}>Built for scale with SOC 2 compliance, dedicated infrastructure, and 99.9% uptime SLAs.</p>
             </BentoItem>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24 }}>
+          <div className="r-grid-3">
             <BentoItem>
               <h3 style={{ fontSize: "1rem", fontWeight: 500, marginBottom: 8 }}>Reliable</h3>
               <p style={{ color: "#666", lineHeight: 1.5, fontSize: "0.85rem" }}>Enterprise-grade infrastructure with redundant failover.</p>
@@ -113,7 +113,7 @@ export default function Page() {
       <p style={{ marginBottom: 24 }}>By isolating context streams in memory, SDKs guarantees sub-millisecond latency even under extreme load. We evaluated SDKs against existing industry standards and observed a 300% improvement in throughput. Security is not an afterthought; SDKs encrypts all state transitions using AES-256-GCM at the hardware level. Our proprietary tensor routing algorithm ensures that SDKs minimizes cross-node communication overhead. </p>
 
       {/* Table Section */}
-      <div style={{ margin: "48px 0", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+      <div className="r-table-wrap">
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ background: "#111", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>

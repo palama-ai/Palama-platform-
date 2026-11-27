@@ -148,6 +148,7 @@ export async function forwardToGateway(
     method: init.method || 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: init.body,
+    signal: AbortSignal.timeout(120_000),
   })
   const text = await upstream.text()
   // ── Record exact (or estimated) token usage for this completion ──

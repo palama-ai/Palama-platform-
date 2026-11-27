@@ -6,6 +6,20 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const pathname = request.nextUrl.pathname
+
+  // Short-circuit when no Supabase session cookies are present:
+  // avoids hammering Supabase Auth on unauthenticated requests during traffic spikes.
+  const hasSessionCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+  if (!hasSessionCookie) {
+    if (pathname.startsWith('/dashboard')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
   const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
   const anonKey = (
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
@@ -22,9 +36,13 @@ export async function updateSession(request: NextRequest) {
     anonKey,
     {
       global: {
-        fetch: async (...args) => {
+        fetch: async (input, init) => {
           try {
-            return await fetch(...args)
+            const timeout = AbortSignal.timeout(3500)
+            const signal = init?.signal && typeof AbortSignal.any === 'function'
+              ? AbortSignal.any([init.signal, timeout])
+              : (init?.signal ?? timeout)
+            return await fetch(input, { ...init, signal })
           } catch (error) {
             console.error('Supabase fetch network error in middleware:', error)
             return new Response(
@@ -69,9 +87,6 @@ export async function updateSession(request: NextRequest) {
   } catch (err: any) {
     console.error('Supabase fetch failed in middleware:', err?.message || err)
   }
-
-  // Protection Logic
-  const pathname = request.nextUrl.pathname
 
   // Protect /dashboard and nested routes
   if (pathname.startsWith('/dashboard') && !user) {

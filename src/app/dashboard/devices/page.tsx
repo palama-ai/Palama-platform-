@@ -233,8 +233,18 @@ export default function DevicesPage() {
             position: relative;
             flex-direction: row;
             flex-wrap: wrap;
-            padding: 16px 20px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
           }
+          .jobgio-logo { margin-bottom: 10px; }
+          .jobgio-nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+          .jobgio-nav-btn { width: auto; padding: 8px 14px; gap: 8px; }
+        }
+        @media (max-width: 640px) {
+          .jobgio-main { padding: 16px 14px 48px !important; }
+          .modal-box { padding: 20px 18px !important; border-radius: 22px !important; }
         }
 
         .jobgio-logo {
@@ -616,7 +626,7 @@ export default function DevicesPage() {
       {/* MAIN CONTENT */}
       <main className="jobgio-main">
         {/* Title & Quick Add Device */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, letterSpacing: "-0.03em", color: "#111", margin: 0 }}>
               Device & Agent Security

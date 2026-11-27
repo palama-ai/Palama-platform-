@@ -51,7 +51,11 @@ export default function UseCasesPage() {
         .uc-card p { font-size: 0.95rem; color: #a1a1aa; margin: 0; line-height: 1.65; flex: 1; }
         .uc-card a { display: inline-block; margin-top: 8px; padding: 10px 22px; border-radius: 999px; background: #fff; color: #000; font-size: 0.9rem; font-weight: 650; text-decoration: none; width: fit-content; }
         .uc-card a:hover { background: #e4e4e7; }
-        @media (max-width: 720px) { .uc-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 720px) {
+          .uc-grid { grid-template-columns: 1fr; padding: 0 16px 72px; }
+          .uc-hero { padding: calc(var(--nav-height) + 40px) 16px 36px; }
+          .uc-card { padding: 22px 18px; }
+        }
       `}</style>
 
       <section className="uc-hero">

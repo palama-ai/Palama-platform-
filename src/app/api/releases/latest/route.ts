@@ -27,6 +27,10 @@ const TOKEN = (process.env.GITHUB_TOKEN || '').trim()
 const CACHE_TTL_MS = 15 * 60 * 1000
 
 let cache: { at: number; payload: { version: string; download_url: string; notes: string; sha256: string } } | null = null
+let inFlightGitHub: Promise<{ version: string; download_url: string; notes: string; sha256: string }> | null = null
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=900',
+}
 
 function empty() {
   return { version: '', download_url: '', notes: '', sha256: '' }
@@ -57,6 +61,7 @@ async function fetchCompanionSha256(setupName: string, assets: any[]): Promise<s
     try {
       const dl = await fetch(ca.browser_download_url, {
         headers: { 'User-Agent': 'Palama-Updater/1.0' },
+        signal: AbortSignal.timeout(3000),
       })
       if (!dl.ok) continue
       const txt = await dl.text()
@@ -79,40 +84,48 @@ async function fetchCompanionSha256(setupName: string, assets: any[]): Promise<s
 
 async function fromGitHub() {
   if (cache && Date.now() - cache.at < CACHE_TTL_MS) return cache.payload
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github+json',
-    'User-Agent': 'Palama-Updater/1.0',
-  }
-  if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`
-  const res = await fetch(
-    `https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=20`,
-    { headers, next: { revalidate: 900 } }
-  )
-  if (!res.ok) throw new Error(`GitHub API ${res.status}`)
-  const releases = (await res.json()) as any[]
-  for (const rel of Array.isArray(releases) ? releases : []) {
-    if (!rel || rel.draft || rel.prerelease) continue
-    const assets = Array.isArray(rel.assets) ? rel.assets : []
-    const setup = assets.find(
-      (a: any) =>
-        typeof a?.name === 'string' &&
-        /palama[ .]setup.*\.exe$/i.test(a.name) &&
-        typeof a?.browser_download_url === 'string'
-    )
-    if (!setup) continue
-    // SHA-256: prefer GitHub asset digest, then companion .sha256 file
-    let sha256 = extractDigest(setup)
-    if (!sha256) sha256 = await fetchCompanionSha256(setup.name, assets)
-    const payload = {
-      version: String(rel.tag_name || '').trim(),
-      download_url: String(setup.browser_download_url),
-      notes: String(rel.body || '').slice(0, 2000),
-      sha256,
+  if (inFlightGitHub) return inFlightGitHub
+  inFlightGitHub = (async () => {
+    try {
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'Palama-Updater/1.0',
+      }
+      if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`
+      const res = await fetch(
+        `https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=20`,
+        { headers, next: { revalidate: 900 }, signal: AbortSignal.timeout(4500) }
+      )
+      if (!res.ok) throw new Error(`GitHub API ${res.status}`)
+      const releases = (await res.json()) as any[]
+      for (const rel of Array.isArray(releases) ? releases : []) {
+        if (!rel || rel.draft || rel.prerelease) continue
+        const assets = Array.isArray(rel.assets) ? rel.assets : []
+        const setup = assets.find(
+          (a: any) =>
+            typeof a?.name === 'string' &&
+            /palama[ .]setup.*\.exe$/i.test(a.name) &&
+            typeof a?.browser_download_url === 'string'
+        )
+        if (!setup) continue
+        // SHA-256: prefer GitHub asset digest, then companion .sha256 file
+        let sha256 = extractDigest(setup)
+        if (!sha256) sha256 = await fetchCompanionSha256(setup.name, assets)
+        const payload = {
+          version: String(rel.tag_name || '').trim(),
+          download_url: String(setup.browser_download_url),
+          notes: String(rel.body || '').slice(0, 2000),
+          sha256,
+        }
+        cache = { at: Date.now(), payload }
+        return payload
+      }
+      return empty()
+    } finally {
+      inFlightGitHub = null
     }
-    cache = { at: Date.now(), payload }
-    return payload
-  }
-  return empty()
+  })()
+  return inFlightGitHub
 }
 
 export async function GET() {
@@ -132,19 +145,22 @@ export async function GET() {
       // Normalize RELEASE_SHA256: must be exactly 64 lowercase hex chars
       const rawSha = (process.env.RELEASE_SHA256 || '').trim()
       const sha256 = /^[a-f0-9]{64}$/i.test(rawSha) ? rawSha.toLowerCase() : ''
-      return NextResponse.json({
-        version: manual,
-        download_url: (process.env.RELEASE_DOWNLOAD_URL || '').trim(),
-        notes: (process.env.RELEASE_NOTES || '').trim(),
-        sha256,
-        ...policyFields,
-      })
+      return NextResponse.json(
+        {
+          version: manual,
+          download_url: (process.env.RELEASE_DOWNLOAD_URL || '').trim(),
+          notes: (process.env.RELEASE_NOTES || '').trim(),
+          sha256,
+          ...policyFields,
+        },
+        { headers: CACHE_HEADERS }
+      )
     }
     const gh = await fromGitHub()
-    return NextResponse.json({ ...gh, ...policyFields })
+    return NextResponse.json({ ...gh, ...policyFields }, { headers: CACHE_HEADERS })
   } catch (e: any) {
     // Serve stale cache rather than breaking update checks on transient errors.
-    if (cache) return NextResponse.json({ ...cache.payload, ...policyFields })
+    if (cache) return NextResponse.json({ ...cache.payload, ...policyFields }, { headers: CACHE_HEADERS })
     return NextResponse.json({ ...empty(), ...policyFields, error: e?.message || 'feed unavailable' })
   }
 }

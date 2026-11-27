@@ -80,6 +80,7 @@ export async function POST(request: Request) {
     const agentResponse = await fetch(`${agentUrl}/api/v1/agent/run`, {
       method: 'POST',
       headers,
+      signal: AbortSignal.timeout(55_000),
       body: JSON.stringify({
         task: task.trim(),
         model: modeUpper.toLowerCase(),

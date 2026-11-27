@@ -26,7 +26,7 @@ export default function CompanyPage() {
       {/* Mission */}
       <section className="section-padding" style={{ background: "#0a0a0a" }}>
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80 }}>
+          <div className="r-split-lg r-split-top">
             <div>
               <h2 style={{ marginBottom: 24 }}>Our mission</h2>
               <p className="text-editorial">
@@ -46,7 +46,7 @@ export default function CompanyPage() {
       {/* Key Numbers */}
       <section className="section-padding">
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40, textAlign: "center" }}>
+          <div className="r-grid-4" style={{ textAlign: "center" }}>
             {[
               { num: "2024", label: "Founded" },
               { num: "50+", label: "Team members" },
@@ -77,7 +77,7 @@ export default function CompanyPage() {
               { title: "Permission Boundaries", desc: "Agents can only access the tools, files, and services explicitly granted by the user. There is no implicit scope escalation." },
               { title: "Continuous Red Teaming", desc: "We continuously test our agents against adversarial misuse, prompt injection, and privilege-escalation edge cases." }
             ].map((item, i) => (
-              <div key={item.title} style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 40, padding: "32px 0", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
+              <div key={item.title} className="r-split-row" style={{ borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
                 <h3 style={{ fontSize: "1.05rem", fontWeight: 500 }}>{item.title}</h3>
                 <p style={{ color: "#a1a1aa", lineHeight: 1.6 }}>{item.desc}</p>
               </div>

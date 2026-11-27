@@ -21,7 +21,7 @@ export function Features({ featuresSubtitle = "Capabilities" }: FeaturesProps) {
                     </p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))', gap: 20 }}>
                     <Card
                         number="01"
                         title="Autonomous Execution"

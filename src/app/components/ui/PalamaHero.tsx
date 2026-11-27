@@ -22,6 +22,7 @@ export default function PalamaHero() {
     >
       {/* Main Content Container */}
       <div
+        className="hero-inner-container"
         style={{
           maxWidth: 1240,
           margin: "0 auto",
@@ -41,14 +42,15 @@ export default function PalamaHero() {
           }}
         >
           <motion.h1
+            className="hero-headline"
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             style={{
               fontFamily: "var(--font-geist-sans), 'Inter', system-ui, sans-serif",
-              fontSize: "clamp(2.55rem, 4.9vw, 4.15rem)",
+              fontSize: "clamp(2.15rem, 4.9vw, 4.15rem)",
               fontWeight: 600,
-              lineHeight: 1.04,
+              lineHeight: 1.05,
               letterSpacing: "-0.045em",
               color: "#0c0c0f",
               maxWidth: 740,
@@ -63,7 +65,7 @@ export default function PalamaHero() {
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
             style={{
               fontSize: "0.96rem",
               lineHeight: 1.55,
@@ -80,7 +82,7 @@ export default function PalamaHero() {
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.45, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -97,9 +99,9 @@ export default function PalamaHero() {
                 gap: 8,
                 background: "#0c0c0f",
                 color: "#ffffff",
-                padding: "10px 22px",
+                padding: "11px 22px",
                 borderRadius: 9999,
-                fontSize: "0.86rem",
+                fontSize: "0.88rem",
                 fontWeight: 550,
                 textDecoration: "none",
                 letterSpacing: "-0.01em",
@@ -122,7 +124,7 @@ export default function PalamaHero() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════ */}
-        {/* CENTERPIECE STAGE: Cleanly Ordered Above-the-Fold Grid    */}
+        {/* CENTERPIECE STAGE: Orbiting Desktop + 2x2 Mobile Grid     */}
         {/* ══════════════════════════════════════════════════════════ */}
         <div
           className="hero-stage"
@@ -134,7 +136,7 @@ export default function PalamaHero() {
             margin: "12px auto 0",
           }}
         >
-          {/* Symmetrical Hairline SVG Orbit Connectors */}
+          {/* Symmetrical Hairline SVG Orbit Connectors (desktop only) */}
           <svg
             className="hero-orbit-lines"
             viewBox="0 0 1120 480"
@@ -149,32 +151,14 @@ export default function PalamaHero() {
               zIndex: 6,
             }}
           >
-            {/* Left outer card connector */}
-            <path
-              d="M 110 85 C 125 210, 235 260, 355 268"
-              stroke="rgba(12, 12, 15, 0.12)"
-              strokeWidth="1"
-            />
-            {/* Right outer card connector */}
-            <path
-              d="M 1010 85 C 995 210, 885 260, 765 268"
-              stroke="rgba(12, 12, 15, 0.12)"
-              strokeWidth="1"
-            />
-            {/* Subtle elliptical guide */}
-            <ellipse
-              cx="560"
-              cy="280"
-              rx="315"
-              ry="105"
-              stroke="rgba(12, 12, 15, 0.055)"
-              strokeWidth="1"
-              strokeDasharray="3 5"
-            />
+            <path d="M 110 85 C 125 210, 235 260, 355 268" stroke="rgba(12, 12, 15, 0.12)" strokeWidth="1" />
+            <path d="M 1010 85 C 995 210, 885 260, 765 268" stroke="rgba(12, 12, 15, 0.12)" strokeWidth="1" />
+            <ellipse cx="560" cy="280" rx="315" ry="105" stroke="rgba(12, 12, 15, 0.055)" strokeWidth="1" strokeDasharray="3 5" />
           </svg>
 
           {/* Soft ambient halo behind portrait */}
           <div
+            className="hero-ambient-halo"
             aria-hidden="true"
             style={{
               position: "absolute",
@@ -191,6 +175,7 @@ export default function PalamaHero() {
 
           {/* Center Editorial Monochrome Portrait */}
           <div
+            className="hero-portrait-wrap"
             style={{
               position: "absolute",
               left: 0,
@@ -204,38 +189,45 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-portrait-box"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: "clamp(380px, 46vw, 520px)",
-                height: "clamp(410px, 47vw, 505px)",
+                width: "clamp(260px, 46vw, 520px)",
+                height: "clamp(270px, 47vw, 505px)",
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "center",
               }}
             >
-              <img
-                src="/hero-portrait.png"
-                alt="Calm focus with Palama"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  objectPosition: "center bottom",
-                  display: "block",
-                  filter: "contrast(1.04)",
-                }}
-              />
+              <picture style={{ width: "100%", height: "100%", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                <source srcSet="/hero-portrait.webp" type="image/webp" />
+                <img
+                  src="/hero-portrait.png"
+                  alt="Calm focus with Palama"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "center bottom",
+                    display: "block",
+                    filter: "contrast(1.04)",
+                  }}
+                />
+              </picture>
             </motion.div>
           </div>
 
-          {/* ── 1. TOP-LEFT SYMMETRIC OUTER CARD ── */}
+          {/* ── 1. TOP-LEFT SYMMETRIC OUTER CARD (desktop) ── */}
           <motion.div
             className="hero-card-outer-left"
-            initial={{ opacity: 0, y: 12, rotate: -3 }}
-            animate={{ opacity: 1, y: 0, rotate: -3 }}
-            transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
               left: "clamp(8px, 2.5vw, 32px)",
@@ -243,8 +235,7 @@ export default function PalamaHero() {
               width: 176,
               padding: "14px 15px",
               borderRadius: 16,
-              background: "rgba(255, 255, 255, 0.92)",
-              backdropFilter: "blur(18px)",
+              background: "rgba(255, 255, 255, 0.94)",
               border: "1px solid rgba(12, 12, 15, 0.08)",
               boxShadow: "0 14px 34px rgba(12, 12, 15, 0.06)",
               zIndex: 18,
@@ -277,12 +268,12 @@ export default function PalamaHero() {
             </div>
           </motion.div>
 
-          {/* ── 2. TOP-RIGHT SYMMETRIC OUTER CARD ── */}
+          {/* ── 2. TOP-RIGHT SYMMETRIC OUTER CARD (desktop) ── */}
           <motion.div
             className="hero-card-outer-right"
-            initial={{ opacity: 0, y: 12, rotate: 3 }}
-            animate={{ opacity: 1, y: 0, rotate: 3 }}
-            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
               right: "clamp(8px, 2.5vw, 32px)",
@@ -290,8 +281,7 @@ export default function PalamaHero() {
               width: 176,
               padding: "14px 15px",
               borderRadius: 16,
-              background: "rgba(255, 255, 255, 0.92)",
-              backdropFilter: "blur(18px)",
+              background: "rgba(255, 255, 255, 0.94)",
               border: "1px solid rgba(12, 12, 15, 0.08)",
               boxShadow: "0 14px 34px rgba(12, 12, 15, 0.06)",
               zIndex: 18,
@@ -305,6 +295,9 @@ export default function PalamaHero() {
                     key={src}
                     src={src}
                     alt=""
+                    width={22}
+                    height={22}
+                    decoding="async"
                     style={{
                       width: 22,
                       height: 22,
@@ -329,7 +322,7 @@ export default function PalamaHero() {
             </div>
           </motion.div>
 
-          {/* ── 3. LEFT BACKGROUND VISUAL CARD ── */}
+          {/* ── 3. LEFT BACKGROUND VISUAL CARD (desktop) ── */}
           <div
             className="hero-card-horizon"
             style={{
@@ -340,15 +333,15 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: -14 }}
+              initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: 150,
                 height: 94,
                 borderRadius: 14,
                 padding: 4,
-                background: "rgba(255,255,255,0.8)",
+                background: "rgba(255,255,255,0.85)",
                 border: "1px solid rgba(12,12,15,0.08)",
                 boxShadow: "0 14px 32px rgba(0,0,0,0.08)",
                 overflow: "hidden",
@@ -357,6 +350,7 @@ export default function PalamaHero() {
               <img
                 src="/hero-card-horizon.jpg"
                 alt="Deep clarity"
+                decoding="async"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -370,7 +364,7 @@ export default function PalamaHero() {
 
           {/* ── 4. INNER LEFT-UPPER ORDERED CAPABILITY CARD ── */}
           <div
-            className="hero-card-focus"
+            className="hero-card-focus hero-tile"
             style={{
               position: "absolute",
               left: "calc(50% - 310px)",
@@ -379,22 +373,23 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, rotate: -1.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: -1.5 }}
-              transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-card-panel hero-rot-focus"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 196,
                 padding: "12px 14px",
                 borderRadius: 14,
-                background: "rgba(255, 255, 255, 0.84)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
+                background: "rgba(255, 255, 255, 0.88)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
                 border: "1px solid rgba(12, 12, 15, 0.08)",
                 boxShadow: "0 14px 34px rgba(12, 12, 15, 0.07)",
                 display: "flex",
                 alignItems: "center",
                 gap: 11,
                 textAlign: "left",
+                height: "100%",
               }}
             >
               <span
@@ -411,7 +406,7 @@ export default function PalamaHero() {
               >
                 <Globe size={14} color="#ffffff" />
               </span>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
                   Browser & Apps
                 </div>
@@ -424,7 +419,7 @@ export default function PalamaHero() {
 
           {/* ── 5. INNER LEFT-LOWER ORDERED CAPABILITY CARD ── */}
           <div
-            className="hero-card-memory"
+            className="hero-card-memory hero-tile"
             style={{
               position: "absolute",
               left: "calc(50% - 285px)",
@@ -433,22 +428,23 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, rotate: 1 }}
-              animate={{ opacity: 1, scale: 1, rotate: 1 }}
-              transition={{ duration: 0.6, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-card-panel hero-rot-memory"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 196,
                 padding: "12px 14px",
                 borderRadius: 14,
-                background: "rgba(255, 255, 255, 0.88)",
-                backdropFilter: "blur(22px)",
-                WebkitBackdropFilter: "blur(22px)",
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
                 border: "1px solid rgba(12, 12, 15, 0.08)",
                 boxShadow: "0 16px 38px rgba(12, 12, 15, 0.09)",
                 display: "flex",
                 alignItems: "center",
                 gap: 11,
                 textAlign: "left",
+                height: "100%",
               }}
             >
               <span
@@ -466,7 +462,7 @@ export default function PalamaHero() {
               >
                 <ShieldCheck size={14} color="#0c0c0f" />
               </span>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
                   Private Memory
                 </div>
@@ -479,7 +475,7 @@ export default function PalamaHero() {
 
           {/* ── 6. INNER RIGHT-UPPER ORDERED CAPABILITY CARD ── */}
           <div
-            className="hero-card-execute"
+            className="hero-card-execute hero-tile"
             style={{
               position: "absolute",
               left: "calc(50% + 114px)",
@@ -488,22 +484,23 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, rotate: 1.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 1.5 }}
-              transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-card-panel hero-rot-execute"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 196,
                 padding: "12px 14px",
                 borderRadius: 14,
-                background: "rgba(255, 255, 255, 0.86)",
-                backdropFilter: "blur(22px)",
-                WebkitBackdropFilter: "blur(22px)",
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
                 border: "1px solid rgba(12, 12, 15, 0.08)",
                 boxShadow: "0 16px 36px rgba(12, 12, 15, 0.08)",
                 display: "flex",
                 alignItems: "center",
                 gap: 11,
                 textAlign: "left",
+                height: "100%",
               }}
             >
               <span
@@ -520,7 +517,7 @@ export default function PalamaHero() {
               >
                 <Cpu size={14} color="#ffffff" />
               </span>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
                   Multi-Model Core
                 </div>
@@ -533,7 +530,7 @@ export default function PalamaHero() {
 
           {/* ── 7. INNER RIGHT-LOWER DARK ECLIPSE SHOWCASE CARD ── */}
           <div
-            className="hero-card-orb"
+            className="hero-card-orb hero-tile"
             style={{
               position: "absolute",
               left: "calc(50% + 130px)",
@@ -542,12 +539,11 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: 14, rotate: -1.5 }}
-              animate={{ opacity: 1, x: 0, rotate: -1.5 }}
-              transition={{ duration: 0.65, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="hero-orb-panel hero-rot-orb"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 166,
-                height: 110,
                 borderRadius: 15,
                 padding: 3,
                 background: "#0a0a0c",
@@ -560,6 +556,7 @@ export default function PalamaHero() {
               <img
                 src="/hero-card-orb.jpg"
                 alt="Palama Engine"
+                decoding="async"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -577,7 +574,7 @@ export default function PalamaHero() {
                   fontWeight: 600,
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
-                  color: "rgba(255, 255, 255, 0.85)",
+                  color: "rgba(255, 255, 255, 0.9)",
                 }}
               >
                 Palama 2.0
@@ -585,12 +582,12 @@ export default function PalamaHero() {
             </motion.div>
           </div>
 
-          {/* ── BOTTOM-LEFT SOCIAL PROOF CORNER ── */}
+          {/* ── BOTTOM-LEFT SOCIAL PROOF CORNER (desktop) ── */}
           <motion.div
             className="hero-corner-left"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.32 }}
+            transition={{ duration: 0.55, delay: 0.3 }}
             style={{
               position: "absolute",
               left: 10,
@@ -611,6 +608,9 @@ export default function PalamaHero() {
                   key={src}
                   src={src}
                   alt=""
+                  width={24}
+                  height={24}
+                  decoding="async"
                   style={{
                     width: 24,
                     height: 24,
@@ -642,9 +642,38 @@ export default function PalamaHero() {
         </div>
       </div>
 
-      {/* Responsive adjustments for smaller screens */}
-      <style jsx>{`
-        @media (max-width: 960px) {
+      {/* Desktop tilts + Tablet scaling + Mobile clean stacked stage + 2x2 cards */}
+      <style jsx global>{`
+        .hero-card-panel {
+          width: 196px;
+        }
+        .hero-orb-panel {
+          width: 166px;
+          height: 110px;
+        }
+
+        @media (min-width: 768px) {
+          .hero-card-outer-left {
+            transform: rotate(-3deg);
+          }
+          .hero-card-outer-right {
+            transform: rotate(3deg);
+          }
+          .hero-rot-focus {
+            transform: rotate(-1.5deg);
+          }
+          .hero-rot-memory {
+            transform: rotate(1deg);
+          }
+          .hero-rot-execute {
+            transform: rotate(1.5deg);
+          }
+          .hero-rot-orb {
+            transform: rotate(-1.5deg);
+          }
+        }
+
+        @media (max-width: 960px) and (min-width: 768px) {
           .hero-orbit-lines,
           .hero-card-outer-left,
           .hero-card-outer-right,
@@ -652,28 +681,100 @@ export default function PalamaHero() {
           .hero-corner-left {
             display: none !important;
           }
+          .hero-portrait-box {
+            width: 340px !important;
+            height: 360px !important;
+          }
+          .hero-card-panel {
+            width: 168px !important;
+          }
+          .hero-orb-panel {
+            width: 140px !important;
+            height: 92px !important;
+          }
           .hero-card-focus {
-            left: 12px !important;
-            top: 72px !important;
-            width: 162px !important;
+            left: 16px !important;
+            top: 68px !important;
           }
           .hero-card-memory {
-            left: 12px !important;
-            top: 224px !important;
-            width: 162px !important;
+            left: 16px !important;
+            top: 214px !important;
           }
           .hero-card-execute {
             left: auto !important;
-            right: 12px !important;
-            top: 100px !important;
-            width: 162px !important;
+            right: 16px !important;
+            top: 86px !important;
           }
           .hero-card-orb {
             left: auto !important;
-            right: 14px !important;
-            top: 235px !important;
-            width: 130px !important;
-            height: 88px !important;
+            right: 20px !important;
+            top: 224px !important;
+          }
+        }
+
+        @media (max-width: 767px) {
+          .palama-editorial-hero {
+            border-radius: 0 0 24px 24px !important;
+            padding-top: calc(var(--nav-height) + 18px) !important;
+          }
+          .hero-inner-container {
+            padding: 0 16px !important;
+          }
+          .hero-orbit-lines,
+          .hero-ambient-halo,
+          .hero-card-outer-left,
+          .hero-card-outer-right,
+          .hero-card-horizon,
+          .hero-corner-left {
+            display: none !important;
+          }
+          .hero-stage {
+            height: auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin-top: 14px !important;
+            padding-bottom: 22px !important;
+          }
+          .hero-portrait-wrap {
+            grid-column: 1 / -1 !important;
+            position: relative !important;
+            bottom: 0 !important;
+            left: auto !important;
+            right: auto !important;
+            order: 1 !important;
+            margin-bottom: -4px !important;
+          }
+          .hero-portrait-box {
+            width: min(260px, 74vw) !important;
+            height: min(270px, 76vw) !important;
+          }
+          .hero-tile {
+            position: static !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
+            bottom: auto !important;
+            order: 2 !important;
+            width: 100% !important;
+          }
+          .hero-card-panel {
+            width: 100% !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            padding: 11px 12px !important;
+          }
+          .hero-orb-panel {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 76px !important;
+          }
+        }
+
+        @media (max-width: 359px) {
+          .hero-stage {
+            grid-template-columns: minmax(0, 1fr) !important;
           }
         }
       `}</style>

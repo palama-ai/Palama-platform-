@@ -36,14 +36,15 @@ export default function ProductsPage() {
         </motion.div>
       </section>
 
-      <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, maxWidth: 880, margin: "0 auto", padding: "0 24px 110px" }}>
+      <section style={{ maxWidth: 880, margin: "0 auto", padding: "0 20px 96px" }}>
+        <div className="r-grid-2">
         {products.map((p, i) => (
           <motion.div
             key={p.name}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 * i }}
-            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 12 }}
+            style={{ background: "#111", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 18, padding: "32px 26px", display: "flex", flexDirection: "column", gap: 12 }}
           >
             <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#a1a1aa" }}>
               {p.tag}
@@ -58,6 +59,7 @@ export default function ProductsPage() {
             </Link>
           </motion.div>
         ))}
+        </div>
       </section>
     </div>
   );

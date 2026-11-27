@@ -382,9 +382,42 @@ export default function DashboardPage() {
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             border-right: none;
             border-bottom: 1px solid rgba(0,0,0,0.06);
-            padding: 16px 20px;
+            padding: 14px 16px;
+          }
+          .jobgio-logo {
+            margin-bottom: 10px;
+          }
+          .jobgio-nav {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+          .jobgio-nav-btn {
+            width: auto;
+            padding: 8px 14px;
+            gap: 8px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .jobgio-main {
+            padding: 16px 14px 48px !important;
+            gap: 16px !important;
+          }
+          .card-header-flex {
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+          .white-card, .bottom-table-card {
+            padding: 18px 16px !important;
+            border-radius: 20px !important;
+          }
+          .settings-modal-box {
+            padding: 20px 18px !important;
+            border-radius: 22px !important;
           }
         }
 

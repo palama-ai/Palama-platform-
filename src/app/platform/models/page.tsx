@@ -29,7 +29,7 @@ export default function ModelsPlatformPage() {
       {/* Dynamic Routing Diagram / Explanation */}
       <section className="section-padding" style={{ background: "#0a0a0a" }}>
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+          <div className="r-split-lg">
             <div>
               <h2>How dynamic routing works.</h2>
               <p className="text-editorial" style={{ margin: "24px 0" }}>
@@ -40,14 +40,14 @@ export default function ModelsPlatformPage() {
               </p>
             </div>
             
-            <div style={{ background: "#111", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", padding: 40, display: "flex", flexDirection: "column", gap: 24 }}>
+            <div style={{ background: "#111", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", padding: "24px", display: "flex", flexDirection: "column", gap: 20 }}>
               {[
                 { task: "Complex Planning", model: "GPT-4o / Claude 3.5 Opus", speed: "High latency", cost: "High cost" },
                 { task: "Code Generation", model: "Claude 3.5 Sonnet", speed: "Medium latency", cost: "Medium cost" },
                 { task: "Vision / Screen Parsing", model: "GPT-4o Vision", speed: "Medium latency", cost: "Medium cost" },
                 { task: "Data Extraction & Routing", model: "Llama 3 8B / GPT-4o-mini", speed: "Ultra-low latency", cost: "Low cost" },
               ].map(route => (
-                <div key={route.task} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 16 }}>
+                <div key={route.task} style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: 16 }}>
                   <div>
                     <div style={{ fontWeight: 500, marginBottom: 4 }}>{route.task}</div>
                     <div style={{ color: "#a1a1aa", fontSize: "0.85rem" }}>{route.model}</div>
@@ -71,7 +71,7 @@ export default function ModelsPlatformPage() {
             Palama integrates natively with the leading model providers, but enterprise customers can seamlessly point the agent framework at their own fine-tuned open-weight models or private VPC endpoints for total data privacy.
           </p>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24, textAlign: "left" }}>
+          <div className="r-grid-3" style={{ textAlign: "left" }}>
             {[
               { name: "Public APIs", desc: "Native support for OpenAI, Anthropic, Google Gemini, and Cohere endpoints." },
               { name: "Open Weights", desc: "Deploy Palama against local instances of Llama 3, Mistral, or Qwen via vLLM." },

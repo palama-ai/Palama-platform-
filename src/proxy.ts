@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from './utils/supabase/middleware'
 
+const PUBLIC_READ_APIS = new Set([
+  '/api/models',
+  '/api/releases/latest',
+  '/api/desktop/config',
+])
+
 function allowedOrigin(request: NextRequest): string {
   const origin = (request.headers.get('origin') || '').trim()
   const selfOrigin = request.nextUrl.origin
@@ -24,29 +30,40 @@ function corsHeaders(request: NextRequest): Record<string, string> {
 }
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
   // Desktop app (Tauri/Electron dev server, future https origin) calls
   // /api/* cross-origin: answer preflights + tag API responses with CORS.
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: corsHeaders(request) })
+    }
+    // Public read-only API endpoints should stay fast & edge-cacheable without
+    // making an external Supabase auth check per request.
+    if (request.method === 'GET' && PUBLIC_READ_APIS.has(pathname)) {
+      const res = NextResponse.next()
+      const headers = corsHeaders(request)
+      for (const [k, v] of Object.entries(headers)) res.headers.set(k, v)
+      return res
     }
     const res = await updateSession(request)
     const headers = corsHeaders(request)
     for (const [k, v] of Object.entries(headers)) res.headers.set(k, v)
     return res
   }
+
   return await updateSession(request)
 }
 
 export const config = {
+  /*
+   * Keep public marketing pages (/, /news, /products, /use-cases, /company,
+   * /download, /developers, /legal, /support, etc.) completely off middleware so
+   * they serve directly from the static edge CDN under heavy traffic spikes.
+   */
   matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - Static public assets (png, svg, jpg, mp4 etc)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api/webhooks/infra|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4)$).*)',
+    '/dashboard/:path*',
+    '/auth/:path*',
+    '/api/((?!webhooks/infra).*)',
   ],
 }

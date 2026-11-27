@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/ui/Navigation";
@@ -6,12 +6,18 @@ import Footer from "./components/ui/Footer";
 import CommandPalette from "./components/ui/CommandPalette";
 import ActionField from "./components/ui/ActionField";
 import { ScrollToTop } from "./components/ui/scroll-to-top";
-import FloatingOrb from "./components/ui/FloatingOrb";
 
 const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
   variable: "--font-geist-sans",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
+};
 
 export const metadata: Metadata = {
   title: "Palama — AI That Acts",
@@ -32,7 +38,6 @@ export default function RootLayout({
         <Navigation />
         <main style={{ flex: 1, position: "relative", zIndex: 10 }}>{children}</main>
         <Footer />
-        <FloatingOrb />
       </body>
     </html>
   );

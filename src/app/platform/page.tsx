@@ -29,7 +29,7 @@ export default function PlatformPage() {
       <section className="section-padding" style={{ background: "#0a0a0a" }}>
         <div className="page-container">
           <h2 style={{ marginBottom: 64 }}>How Palama thinks and acts</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          <div className="r-grid-4">
             {[
               {
                 title: "Models",
@@ -79,7 +79,7 @@ export default function PlatformPage() {
       {/* The Execution Pipeline */}
       <section className="section-padding">
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+          <div className="r-split-lg">
             <div>
               <h2>From goal to result.</h2>
               <p className="text-editorial" style={{ margin: "24px 0" }}>

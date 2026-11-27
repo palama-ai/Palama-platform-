@@ -276,7 +276,16 @@ export default function ApiConsolePage() {
         .center { text-align: center; padding: 100px 20px; color: #6d6d74; }
         .center a { color: #111; font-weight: 600; }
         @media (max-width: 1100px) { .ccards { grid-template-columns: repeat(2, 1fr); } .cgrid { grid-template-columns: 1fr; } }
-        @media (max-width: 640px) { .ccards { grid-template-columns: 1fr; } .cside { display: none; } }
+        @media (max-width: 640px) {
+          .console { flex-direction: column; }
+          .cside { width: 100%; height: auto; position: relative; flex-direction: row; overflow-x: auto; padding: 10px 12px; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.08); gap: 6px; }
+          .csec, .ccollapse { display: none; }
+          .snav { width: auto; flex-shrink: 0; padding: 8px 12px; font-size: 0.85rem; }
+          .cmain { padding: 16px 14px 48px; }
+          .ctop { flex-wrap: wrap; }
+          .csearch input { width: 130px; }
+          .ccards { grid-template-columns: 1fr; }
+        }
       `}</style>
 
       <aside className="cside">
@@ -409,6 +418,7 @@ export default function ApiConsolePage() {
                     )}
                     {analysis === "ranking" && (
                       perModel.length === 0 ? <p style={{ color: "#8b8b93", fontSize: "0.88rem" }}>No calls yet.</p> :
+                      <div style={{ overflowX: "auto" }}>
                       <table className="ctable">
                         <thead><tr><th>#</th><th>Model</th><th>Calls</th><th>Share</th></tr></thead>
                         <tbody>
@@ -422,6 +432,7 @@ export default function ApiConsolePage() {
                           ))}
                         </tbody>
                       </table>
+                      </div>
                     )}
                   </div>
                   <div className="cpanel">
@@ -499,6 +510,7 @@ export default function ApiConsolePage() {
                 {ranged.length === 0 ? (
                   <p style={{ fontSize: "0.88rem", color: "#8b8b93" }}>No API calls in this range yet.</p>
                 ) : (
+                  <div style={{ overflowX: "auto" }}>
                   <table className="ctable">
                     <thead><tr><th>Time</th><th>Endpoint</th><th>Model</th></tr></thead>
                     <tbody>
@@ -511,6 +523,7 @@ export default function ApiConsolePage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             )}
@@ -524,6 +537,7 @@ export default function ApiConsolePage() {
                 {models.length === 0 ? (
                   <p style={{ fontSize: "0.88rem", color: "#8b8b93" }}>Catalog unavailable right now.</p>
                 ) : (
+                  <div style={{ overflowX: "auto" }}>
                   <table className="ctable">
                     <thead><tr><th>Model</th><th>Provider</th><th>Status</th></tr></thead>
                     <tbody>
@@ -536,6 +550,7 @@ export default function ApiConsolePage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             )}

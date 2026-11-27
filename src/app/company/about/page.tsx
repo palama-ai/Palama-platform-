@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <div style={{ minHeight: "100vh" }}>
       {/* Hero */}
-      <section style={{ paddingTop: "calc(var(--nav-height) + 120px)", paddingBottom: 100 }}>
+      <section style={{ paddingTop: "calc(var(--nav-height) + 72px)", paddingBottom: 64 }}>
         <div className="page-container" style={{ maxWidth: 960 }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
@@ -35,7 +35,7 @@ export default function Page() {
       {/* Bento Feature Block */}
       <section style={{ background: "#080808", paddingTop: 80, paddingBottom: 80, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
+          <div className="r-grid-2" style={{ marginBottom: 24 }}>
             <BentoItem>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 500, marginBottom: 12 }}>What is About Palama?</h3>
               <p style={{ color: "#888", lineHeight: 1.6, fontSize: "0.9rem" }}>Our mission to build universal super-agents.</p>
@@ -45,7 +45,7 @@ export default function Page() {
               <p style={{ color: "#888", lineHeight: 1.6, fontSize: "0.9rem" }}>Built for scale with SOC 2 compliance, dedicated infrastructure, and 99.9% uptime SLAs.</p>
             </BentoItem>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24 }}>
+          <div className="r-grid-3">
             <BentoItem>
               <h3 style={{ fontSize: "1rem", fontWeight: 500, marginBottom: 8 }}>Reliable</h3>
               <p style={{ color: "#666", lineHeight: 1.5, fontSize: "0.85rem" }}>Enterprise-grade infrastructure with redundant failover.</p>
@@ -113,7 +113,7 @@ export default function Page() {
       <p style={{ marginBottom: 24 }}>The fault-tolerance mechanisms in About Palama automatically reroute execution paths if a localized node failure occurs. The integration of non-blocking I/O operations ensures that the core event loop of About Palama remains highly responsive. Security is not an afterthought; About Palama encrypts all state transitions using AES-256-GCM at the hardware level. Developers can leverage the extensible API of About Palama to seamlessly embed its capabilities into legacy systems. </p>
 
       {/* Table Section */}
-      <div style={{ margin: "48px 0", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
+      <div className="r-table-wrap">
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ background: "#111", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>

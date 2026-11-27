@@ -71,7 +71,12 @@ export default function DownloadPage() {
         .dl-join:disabled { opacity: 0.6; cursor: not-allowed; }
         .dl-ok { color: #4ade80; font-size: 0.9rem; }
         .dl-err { color: #f87171; font-size: 0.9rem; }
-        @media (max-width: 720px) { .dl-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 720px) {
+          .dl-grid { grid-template-columns: 1fr; padding: 0 16px 72px; }
+          .dl-hero { padding: calc(var(--nav-height) + 40px) 16px 28px; }
+          .dl-card { padding: 26px 20px; }
+          .dl-form { flex-direction: column; }
+        }
       `}</style>
 
       <section className="dl-hero">

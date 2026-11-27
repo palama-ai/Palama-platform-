@@ -59,7 +59,7 @@ export default function UseCaseVideos() {
   }, [activeVideo]);
 
   return (
-    <section style={{ paddingTop: 32, paddingBottom: 64 }}>
+    <section className="ucv-section" style={{ paddingTop: 32, paddingBottom: 64 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <h2 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#fff" }}>Use cases</h2>
         <Link href="/use-cases" style={{ fontSize: "0.82rem", color: "#a1a1aa", textDecoration: "none" }}>
@@ -230,13 +230,13 @@ export default function UseCaseVideos() {
       {/* Expanded Lightbox Player */}
       {activeVideo && (
         <div
+          className="ucv-modal-backdrop"
           onClick={() => setActiveVideo(null)}
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 200,
-            background: "rgba(0,0,0,0.85)",
-            backdropFilter: "blur(8px)",
+            background: "rgba(0,0,0,0.88)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -306,6 +306,15 @@ export default function UseCaseVideos() {
         @media (max-width: 820px) {
           .ucv-grid {
             grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .ucv-section {
+            padding-top: 20px !important;
+            padding-bottom: 44px !important;
+          }
+          .ucv-modal-backdrop {
+            padding: 12px !important;
           }
         }
       `}</style>

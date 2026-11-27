@@ -28,8 +28,8 @@ export default function DevelopersPage() {
       {/* Quick Start Code Block */}
       <section style={{ paddingBottom: 120 }}>
         <div className="page-container">
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
-            <div>
+          <div className="r-split-lg r-split-top r-gap-64">
+            <div style={{ minWidth: 0 }}>
               <h2 style={{ marginBottom: 24 }}>Start in minutes.</h2>
               <p className="text-editorial" style={{ marginBottom: 32 }}>
                 Install the SDK, authenticate with your API key, and deploy your first agent with a single function call.
@@ -106,7 +106,7 @@ print(result.artifacts)
       <section className="section-padding" style={{ background: "#0a0a0a" }}>
         <div className="page-container">
           <h2 style={{ marginBottom: 64 }}>What you can build</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+          <div className="r-grid-3">
             {[
               { title: "Custom Agents", desc: "Define agent behavior, persona, available skills, and execution constraints. Deploy them via API or embed them in your product." },
               { title: "Skill Chains", desc: "Compose multi-step workflows by chaining skills together. Palama handles orchestration, error recovery, and state management." },
