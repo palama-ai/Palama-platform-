@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Sparkles, Target, Layers, AudioLines, Plus } from "lucide-react";
+import { ArrowRight, Play, Cpu, Globe, ShieldCheck, Command, Plus } from "lucide-react";
 
-function FourPointStar({ size = 14, color = "#0c0c0f" }: { size?: number; color?: string }) {
+function FourPointStar({ size = 12, color = "#0c0c0f" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} aria-hidden="true">
       <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4L12 0Z" />
@@ -19,24 +19,24 @@ export default function PalamaHero() {
       style={{
         position: "relative",
         width: "100%",
-        background: "radial-gradient(ellipse 85% 75% at 50% 38%, #ffffff 0%, #f6f5f2 56%, #ecebe6 100%)",
+        background: "radial-gradient(ellipse 85% 75% at 50% 38%, #ffffff 0%, #f6f5f2 58%, #ecebe6 100%)",
         color: "#0c0c0f",
-        paddingTop: "calc(var(--nav-height) + 40px)",
+        paddingTop: "calc(var(--nav-height) + 28px)",
         paddingBottom: 0,
         overflow: "hidden",
         borderRadius: "0 0 36px 36px",
         boxShadow: "0 24px 80px rgba(0, 0, 0, 0.45)",
       }}
     >
-      {/* Top-Right Rotating Editorial Stamp */}
+      {/* Top-Right Static Stamp Badge */}
       <div
         className="hero-stamp-badge"
         style={{
           position: "absolute",
-          top: "calc(var(--nav-height) + 28px)",
-          right: "clamp(20px, 5vw, 72px)",
-          width: 78,
-          height: 78,
+          top: "calc(var(--nav-height) + 22px)",
+          right: "clamp(20px, 5vw, 68px)",
+          width: 74,
+          height: 74,
           zIndex: 20,
           pointerEvents: "none",
           display: "flex",
@@ -44,12 +44,7 @@ export default function PalamaHero() {
           justifyContent: "center",
         }}
       >
-        <svg
-          viewBox="0 0 100 100"
-          width={78}
-          height={78}
-          style={{ position: "absolute", inset: 0 }}
-        >
+        <svg viewBox="0 0 100 100" width={74} height={74} style={{ position: "absolute", inset: 0 }}>
           <defs>
             <path
               id="palama-stamp-circle"
@@ -58,29 +53,29 @@ export default function PalamaHero() {
           </defs>
           <text
             fill="#18181b"
-            fontSize="7.4"
+            fontSize="7.3"
             fontWeight="600"
             letterSpacing="2.3"
             style={{ textTransform: "uppercase" }}
           >
             <textPath href="#palama-stamp-circle" startOffset="0%">
-              • A MORE FOCUSED YOU • PALAMA AI
+              • AUTONOMOUS AI • PALAMA OS
             </textPath>
           </text>
         </svg>
-        <FourPointStar size={14} color="#18181b" />
+        <FourPointStar size={12} color="#18181b" />
       </div>
 
       {/* Main Content Container */}
       <div
         style={{
-          maxWidth: 1260,
+          maxWidth: 1240,
           margin: "0 auto",
           padding: "0 24px",
           position: "relative",
         }}
       >
-        {/* Editorial Header Block */}
+        {/* Header Block — Pure Palama Geometric Identity */}
         <div
           style={{
             display: "flex",
@@ -91,52 +86,77 @@ export default function PalamaHero() {
             zIndex: 25,
           }}
         >
-          <motion.h1
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              fontFamily: "var(--font-serif), Georgia, 'Times New Roman', serif",
-              fontSize: "clamp(3.15rem, 6.2vw, 5.25rem)",
-              fontWeight: 400,
-              lineHeight: 0.96,
-              letterSpacing: "-0.03em",
-              color: "#0c0c0f",
-              maxWidth: 780,
-              margin: "0 0 18px",
-            }}
-          >
-            A clearer workflow
-            <br />
-            for <span style={{ fontStyle: "italic" }}>everything</span> you build.
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              fontSize: "0.98rem",
-              lineHeight: 1.55,
-              color: "#52525b",
-              maxWidth: 460,
-              margin: "0 0 26px",
-              fontWeight: 400,
-            }}
-          >
-            Palama unites your browser, apps, code, and files into one calm
-            autonomous co-worker — right on your screen.
-          </motion.p>
-
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "5px 13px",
+              borderRadius: 9999,
+              background: "rgba(255, 255, 255, 0.78)",
+              border: "1px solid rgba(12, 12, 15, 0.08)",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#3f3f46",
+              marginBottom: 14,
+            }}
+          >
+            <FourPointStar size={9} color="#0c0c0f" />
+            <span>Palama Co-Worker 2.0</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              fontFamily: "var(--font-geist-sans), 'Inter', system-ui, sans-serif",
+              fontSize: "clamp(2.55rem, 4.9vw, 4.15rem)",
+              fontWeight: 600,
+              lineHeight: 1.04,
+              letterSpacing: "-0.045em",
+              color: "#0c0c0f",
+              maxWidth: 740,
+              margin: "0 0 14px",
+            }}
+          >
+            One quiet co-worker
+            <br />
+            for everything you build.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              fontSize: "0.96rem",
+              lineHeight: 1.55,
+              color: "#52525b",
+              maxWidth: 480,
+              margin: "0 0 22px",
+              fontWeight: 400,
+            }}
+          >
+            Palama operates your browser, apps, terminal, and files — cleanly
+            from a single workspace built for deep execution.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 12,
+              gap: 10,
               flexWrap: "wrap",
             }}
           >
@@ -148,25 +168,26 @@ export default function PalamaHero() {
                 gap: 8,
                 background: "#0c0c0f",
                 color: "#ffffff",
-                padding: "11px 22px",
+                padding: "10px 22px",
                 borderRadius: 9999,
-                fontSize: "0.88rem",
-                fontWeight: 500,
+                fontSize: "0.86rem",
+                fontWeight: 550,
                 textDecoration: "none",
-                boxShadow: "0 8px 24px rgba(12, 12, 15, 0.18)",
+                letterSpacing: "-0.01em",
+                boxShadow: "0 8px 24px rgba(12, 12, 15, 0.16)",
                 transition: "transform 0.2s ease, background 0.2s ease",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-1px)";
-                e.currentTarget.style.background = "#1c1c21";
+                e.currentTarget.style.background = "#1e1e24";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.background = "#0c0c0f";
               }}
             >
-              <span>Get started free</span>
-              <ArrowRight size={15} />
+              <span>Download free</span>
+              <ArrowRight size={14} />
             </Link>
 
             <Link
@@ -175,13 +196,14 @@ export default function PalamaHero() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                background: "rgba(255, 255, 255, 0.86)",
+                background: "rgba(255, 255, 255, 0.9)",
                 color: "#0c0c0f",
-                padding: "11px 20px",
+                padding: "10px 20px",
                 borderRadius: 9999,
-                fontSize: "0.88rem",
-                fontWeight: 500,
+                fontSize: "0.86rem",
+                fontWeight: 550,
                 textDecoration: "none",
+                letterSpacing: "-0.01em",
                 border: "1px solid rgba(12, 12, 15, 0.12)",
                 boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
                 transition: "transform 0.2s ease, background 0.2s ease",
@@ -192,7 +214,7 @@ export default function PalamaHero() {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.86)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.9)";
               }}
             >
               <span
@@ -209,13 +231,13 @@ export default function PalamaHero() {
               >
                 <Play size={8} fill="#fff" style={{ marginLeft: 1 }} />
               </span>
-              <span>Watch video</span>
+              <span>Explore features</span>
             </Link>
           </motion.div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════ */}
-        {/* CENTERPIECE STAGE: Portrait + Orbiting 3D Cards + Threads */}
+        {/* CENTERPIECE STAGE: Cleanly Ordered Above-the-Fold Grid    */}
         {/* ══════════════════════════════════════════════════════════ */}
         <div
           className="hero-stage"
@@ -223,14 +245,14 @@ export default function PalamaHero() {
             position: "relative",
             width: "100%",
             maxWidth: 1120,
-            height: "clamp(480px, 56vw, 620px)",
-            margin: "14px auto 0",
+            height: "clamp(410px, 43vw, 480px)",
+            margin: "12px auto 0",
           }}
         >
-          {/* Curved Hairline Orbit Connectors (Desktop) */}
+          {/* Symmetrical Hairline SVG Orbit Connectors */}
           <svg
             className="hero-orbit-lines"
-            viewBox="0 0 1120 540"
+            viewBox="0 0 1120 480"
             fill="none"
             preserveAspectRatio="none"
             style={{
@@ -242,31 +264,31 @@ export default function PalamaHero() {
               zIndex: 6,
             }}
           >
-            {/* Left outer card to portrait orbit */}
+            {/* Left outer card connector */}
             <path
-              d="M 105 70 C 115 215, 240 275, 360 285"
-              stroke="rgba(12, 12, 15, 0.14)"
+              d="M 110 85 C 125 210, 235 260, 355 268"
+              stroke="rgba(12, 12, 15, 0.12)"
               strokeWidth="1"
             />
-            {/* Right outer card to portrait orbit */}
+            {/* Right outer card connector */}
             <path
-              d="M 995 160 C 960 285, 845 325, 735 315"
-              stroke="rgba(12, 12, 15, 0.14)"
+              d="M 1010 85 C 995 210, 885 260, 765 268"
+              stroke="rgba(12, 12, 15, 0.12)"
               strokeWidth="1"
             />
-            {/* Subtle orbital ellipse ring */}
+            {/* Subtle elliptical guide */}
             <ellipse
               cx="560"
-              cy="315"
-              rx="295"
-              ry="108"
-              stroke="rgba(12, 12, 15, 0.05)"
+              cy="280"
+              rx="315"
+              ry="105"
+              stroke="rgba(12, 12, 15, 0.055)"
               strokeWidth="1"
-              strokeDasharray="4 6"
+              strokeDasharray="3 5"
             />
           </svg>
 
-          {/* Soft ambient spotlight behind the portrait */}
+          {/* Soft ambient halo behind portrait */}
           <div
             aria-hidden="true"
             style={{
@@ -275,20 +297,20 @@ export default function PalamaHero() {
               bottom: 0,
               transform: "translateX(-50%)",
               width: "min(560px, 85vw)",
-              height: "min(480px, 90%)",
+              height: "92%",
               background: "radial-gradient(circle at 50% 52%, rgba(255,255,255,0.95) 0%, rgba(246,245,242,0) 72%)",
               pointerEvents: "none",
               zIndex: 5,
             }}
           />
 
-          {/* Center Editorial Monochrome Portrait — outer static wrapper keeps X centered cleanly */}
+          {/* Center Editorial Monochrome Portrait */}
           <div
             style={{
               position: "absolute",
               left: 0,
               right: 0,
-              bottom: -6,
+              bottom: -4,
               display: "flex",
               justifyContent: "center",
               alignItems: "flex-end",
@@ -297,12 +319,12 @@ export default function PalamaHero() {
             }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 26, scale: 0.97 }}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: "clamp(420px, 56vw, 660px)",
-                height: "clamp(470px, 60vw, 650px)",
+                width: "clamp(380px, 46vw, 520px)",
+                height: "clamp(410px, 47vw, 505px)",
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "center",
@@ -323,80 +345,133 @@ export default function PalamaHero() {
             </motion.div>
           </div>
 
-          {/* ── 1. OUTER TOP-LEFT FLOATING CARD ── */}
+          {/* ── 1. TOP-LEFT SYMMETRIC OUTER CARD ── */}
           <motion.div
             className="hero-card-outer-left"
-            initial={{ opacity: 0, y: 14, rotate: -5.5 }}
-            animate={{ opacity: 1, y: 0, rotate: -5.5 }}
-            transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 12, rotate: -3 }}
+            animate={{ opacity: 1, y: 0, rotate: -3 }}
+            transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
             style={{
               position: "absolute",
-              left: "clamp(4px, 3vw, 42px)",
-              top: -42,
-              width: 158,
-              padding: "16px 15px",
-              borderRadius: 18,
+              left: "clamp(8px, 2.5vw, 32px)",
+              top: -28,
+              width: 176,
+              padding: "14px 15px",
+              borderRadius: 16,
               background: "rgba(255, 255, 255, 0.92)",
               backdropFilter: "blur(18px)",
-              border: "1px solid rgba(12, 12, 15, 0.06)",
-              boxShadow: "0 18px 42px rgba(12, 12, 15, 0.08)",
+              border: "1px solid rgba(12, 12, 15, 0.08)",
+              boxShadow: "0 14px 34px rgba(12, 12, 15, 0.06)",
               zIndex: 18,
               textAlign: "left",
             }}
           >
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: 8,
-                background: "#f4f4f5",
-                border: "1px solid rgba(12,12,15,0.06)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 10,
-              }}
-            >
-              <AudioLines size={14} color="#18181b" />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 8,
+                  background: "#0c0c0f",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Command size={13} color="#ffffff" />
+              </span>
+              <span style={{ fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.08em", color: "#71717a", textTransform: "uppercase" }}>
+                Workflow
+              </span>
             </div>
-            <div style={{ fontSize: "0.84rem", fontWeight: 600, lineHeight: 1.25, color: "#0c0c0f", marginBottom: 6 }}>
-              Turn thoughts
-              <br />
-              into progress.
+            <div style={{ fontSize: "0.84rem", fontWeight: 600, lineHeight: 1.25, color: "#0c0c0f", letterSpacing: "-0.02em", marginBottom: 4 }}>
+              Direct execution.
             </div>
-            <div style={{ fontSize: "0.7rem", lineHeight: 1.4, color: "#71717a" }}>
-              Plan, automate and finish more.
+            <div style={{ fontSize: "0.7rem", lineHeight: 1.4, color: "#52525b" }}>
+              Terminal, apps, files & browser in one command.
             </div>
           </motion.div>
 
-          {/* ── 2. INNER LEFT BACKGROUND CURVED LANDSCAPE CARD ── */}
+          {/* ── 2. TOP-RIGHT SYMMETRIC OUTER CARD ── */}
+          <motion.div
+            className="hero-card-outer-right"
+            initial={{ opacity: 0, y: 12, rotate: 3 }}
+            animate={{ opacity: 1, y: 0, rotate: 3 }}
+            transition={{ duration: 0.6, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              position: "absolute",
+              right: "clamp(8px, 2.5vw, 32px)",
+              top: -28,
+              width: 176,
+              padding: "14px 15px",
+              borderRadius: 16,
+              background: "rgba(255, 255, 255, 0.92)",
+              backdropFilter: "blur(18px)",
+              border: "1px solid rgba(12, 12, 15, 0.08)",
+              boxShadow: "0 14px 34px rgba(12, 12, 15, 0.06)",
+              zIndex: 18,
+              textAlign: "left",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {["/hero-avatar-1.jpg", "/hero-avatar-2.jpg", "/hero-avatar-3.jpg"].map((src, i) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt=""
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid #ffffff",
+                      marginLeft: i === 0 ? 0 : -6,
+                      filter: "grayscale(0.35)",
+                    }}
+                  />
+                ))}
+              </div>
+              <span style={{ fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.08em", color: "#71717a", textTransform: "uppercase" }}>
+                Sync
+              </span>
+            </div>
+            <div style={{ fontSize: "0.84rem", fontWeight: 600, lineHeight: 1.25, color: "#0c0c0f", letterSpacing: "-0.02em", marginBottom: 4 }}>
+              Desktop & cloud.
+            </div>
+            <div style={{ fontSize: "0.7rem", lineHeight: 1.4, color: "#52525b" }}>
+              Work seamlessly across devices with live state.
+            </div>
+          </motion.div>
+
+          {/* ── 3. LEFT BACKGROUND VISUAL CARD ── */}
           <div
             className="hero-card-horizon"
             style={{
               position: "absolute",
-              left: "calc(50% - 355px)",
-              top: 235,
+              left: "calc(50% - 375px)",
+              top: 150,
               zIndex: 9,
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: -16 }}
+              initial={{ opacity: 0, x: -14 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.65, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 146,
-                height: 92,
+                width: 150,
+                height: 94,
                 borderRadius: 14,
                 padding: 4,
-                background: "rgba(255,255,255,0.72)",
-                border: "1px solid rgba(255,255,255,0.92)",
-                boxShadow: "0 16px 36px rgba(0,0,0,0.1)",
+                background: "rgba(255,255,255,0.8)",
+                border: "1px solid rgba(12,12,15,0.08)",
+                boxShadow: "0 14px 32px rgba(0,0,0,0.08)",
                 overflow: "hidden",
               }}
             >
               <img
                 src="/hero-card-horizon.jpg"
-                alt="Deep perspective"
+                alt="Deep clarity"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -408,190 +483,198 @@ export default function PalamaHero() {
             </motion.div>
           </div>
 
-          {/* ── 3. INNER LEFT-UPPER FROSTED GLASS PILL (Focus) ── */}
+          {/* ── 4. INNER LEFT-UPPER ORDERED CAPABILITY CARD ── */}
           <div
             className="hero-card-focus"
             style={{
               position: "absolute",
-              left: "calc(50% - 290px)",
-              top: 138,
+              left: "calc(50% - 310px)",
+              top: 74,
               zIndex: 18,
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, rotate: -2.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: -2.5 }}
-              transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                width: 174,
-                padding: "12px 14px",
-                borderRadius: 14,
-                background: "rgba(255, 255, 255, 0.76)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.88)",
-                boxShadow: "0 14px 36px rgba(12, 12, 15, 0.08)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                textAlign: "left",
-              }}
-            >
-              <span
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: "#e7f8c3",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Target size={14} color="#4d7c0f" />
-              </span>
-              <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Focus</div>
-                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                  Deep work, real results.
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* ── 4. INNER LEFT-LOWER FROSTED GLASS PILL (Memory) ── */}
-          <div
-            className="hero-card-memory"
-            style={{
-              position: "absolute",
-              left: "calc(50% - 252px)",
-              top: 296,
-              zIndex: 22,
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, rotate: 1.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 1.5 }}
-              transition={{ duration: 0.6, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                width: 174,
-                padding: "13px 14px",
-                borderRadius: 15,
-                background: "rgba(255, 255, 255, 0.8)",
-                backdropFilter: "blur(22px)",
-                WebkitBackdropFilter: "blur(22px)",
-                border: "1px solid rgba(255, 255, 255, 0.92)",
-                boxShadow: "0 18px 40px rgba(12, 12, 15, 0.11)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                textAlign: "left",
-              }}
-            >
-              <span
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: "#ede9fe",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Sparkles size={14} color="#7c3aed" />
-              </span>
-              <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Memory</div>
-                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                  Context that stays yours.
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* ── 5. INNER RIGHT-UPPER FROSTED GLASS PILL (Plan) ── */}
-          <div
-            className="hero-card-execute"
-            style={{
-              position: "absolute",
-              left: "calc(50% + 128px)",
-              top: 192,
-              zIndex: 20,
             }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.96, rotate: -1.5 }}
               animate={{ opacity: 1, scale: 1, rotate: -1.5 }}
-              transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 174,
-                padding: "13px 14px",
-                borderRadius: 15,
-                background: "rgba(255, 255, 255, 0.8)",
-                backdropFilter: "blur(22px)",
-                WebkitBackdropFilter: "blur(22px)",
-                border: "1px solid rgba(255, 255, 255, 0.92)",
-                boxShadow: "0 16px 38px rgba(12, 12, 15, 0.09)",
+                width: 196,
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: "rgba(255, 255, 255, 0.84)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(12, 12, 15, 0.08)",
+                boxShadow: "0 14px 34px rgba(12, 12, 15, 0.07)",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: 11,
                 textAlign: "left",
               }}
             >
               <span
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  background: "#ffedd5",
+                  width: 30,
+                  height: 30,
+                  borderRadius: 9,
+                  background: "#0c0c0f",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
-                <Layers size={14} color="#ea580c" />
+                <Globe size={14} color="#ffffff" />
               </span>
               <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0c0c0f" }}>Plan</div>
-                <div style={{ fontSize: "0.66rem", color: "#52525b", lineHeight: 1.3 }}>
-                  Turn prompts into action.
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
+                  Browser & Apps
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#52525b", lineHeight: 1.35 }}>
+                  Autonomous web navigation.
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* ── 6. INNER RIGHT-LOWER DARK ECLIPSE ORB CARD ── */}
+          {/* ── 5. INNER LEFT-LOWER ORDERED CAPABILITY CARD ── */}
+          <div
+            className="hero-card-memory"
+            style={{
+              position: "absolute",
+              left: "calc(50% - 285px)",
+              top: 232,
+              zIndex: 22,
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, rotate: 1 }}
+              animate={{ opacity: 1, scale: 1, rotate: 1 }}
+              transition={{ duration: 0.6, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                width: 196,
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: "rgba(255, 255, 255, 0.88)",
+                backdropFilter: "blur(22px)",
+                WebkitBackdropFilter: "blur(22px)",
+                border: "1px solid rgba(12, 12, 15, 0.08)",
+                boxShadow: "0 16px 38px rgba(12, 12, 15, 0.09)",
+                display: "flex",
+                alignItems: "center",
+                gap: 11,
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 9,
+                  background: "#f4f4f5",
+                  border: "1px solid rgba(12,12,15,0.08)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <ShieldCheck size={14} color="#0c0c0f" />
+              </span>
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
+                  Private Memory
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#52525b", lineHeight: 1.35 }}>
+                  Local context, stays yours.
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── 6. INNER RIGHT-UPPER ORDERED CAPABILITY CARD ── */}
+          <div
+            className="hero-card-execute"
+            style={{
+              position: "absolute",
+              left: "calc(50% + 114px)",
+              top: 96,
+              zIndex: 20,
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, rotate: 1.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 1.5 }}
+              transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                width: 196,
+                padding: "12px 14px",
+                borderRadius: 14,
+                background: "rgba(255, 255, 255, 0.86)",
+                backdropFilter: "blur(22px)",
+                WebkitBackdropFilter: "blur(22px)",
+                border: "1px solid rgba(12, 12, 15, 0.08)",
+                boxShadow: "0 16px 36px rgba(12, 12, 15, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: 11,
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 9,
+                  background: "#0c0c0f",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Cpu size={14} color="#ffffff" />
+              </span>
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#0c0c0f", letterSpacing: "-0.015em" }}>
+                  Multi-Model Core
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#52525b", lineHeight: 1.35 }}>
+                  Smart routing per task.
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── 7. INNER RIGHT-LOWER DARK ECLIPSE SHOWCASE CARD ── */}
           <div
             className="hero-card-orb"
             style={{
               position: "absolute",
-              left: "calc(50% + 145px)",
-              top: 324,
+              left: "calc(50% + 130px)",
+              top: 222,
               zIndex: 16,
             }}
           >
             <motion.div
-              initial={{ opacity: 0, x: 16, rotate: 3.5 }}
-              animate={{ opacity: 1, x: 0, rotate: 3.5 }}
-              transition={{ duration: 0.7, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, x: 14, rotate: -1.5 }}
+              animate={{ opacity: 1, x: 0, rotate: -1.5 }}
+              transition={{ duration: 0.65, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: 142,
-                height: 96,
+                width: 166,
+                height: 110,
                 borderRadius: 15,
                 padding: 3,
                 background: "#0a0a0c",
-                border: "1px solid rgba(255, 255, 255, 0.16)",
-                boxShadow: "0 20px 44px rgba(0, 0, 0, 0.28)",
+                border: "1px solid rgba(255, 255, 255, 0.14)",
+                boxShadow: "0 20px 44px rgba(0, 0, 0, 0.24)",
                 overflow: "hidden",
+                position: "relative",
               }}
             >
               <img
                 src="/hero-card-orb.jpg"
-                alt="Autonomous intelligence core"
+                alt="Palama Engine"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -600,31 +683,44 @@ export default function PalamaHero() {
                   display: "block",
                 }}
               />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  bottom: 8,
+                  fontSize: "0.64rem",
+                  fontWeight: 600,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: "rgba(255, 255, 255, 0.85)",
+                }}
+              >
+                Palama 2.0
+              </div>
             </motion.div>
           </div>
 
-          {/* ── 7. OUTER TOP-RIGHT FLOATING SYNC CARD ── */}
+          {/* ── BOTTOM-LEFT SOCIAL PROOF CORNER ── */}
           <motion.div
-            className="hero-card-outer-right"
-            initial={{ opacity: 0, y: 14, rotate: 4.5 }}
-            animate={{ opacity: 1, y: 0, rotate: 4.5 }}
-            transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="hero-corner-left"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.32 }}
             style={{
               position: "absolute",
-              right: "clamp(4px, 3vw, 38px)",
-              top: 38,
-              width: 170,
-              padding: "16px 15px",
-              borderRadius: 18,
-              background: "rgba(255, 255, 255, 0.92)",
-              backdropFilter: "blur(18px)",
-              border: "1px solid rgba(12, 12, 15, 0.06)",
-              boxShadow: "0 18px 42px rgba(12, 12, 15, 0.08)",
-              zIndex: 18,
+              left: 10,
+              bottom: 28,
               textAlign: "left",
+              zIndex: 20,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+            <div style={{ width: 14, height: 1, background: "rgba(12,12,15,0.35)", marginBottom: 8 }} />
+            <div style={{ fontSize: "0.73rem", lineHeight: 1.4, color: "#52525b", marginBottom: 8, maxWidth: 165 }}>
+              Built for makers, teams
+              <br />
+              & autonomous work.
+            </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
               {["/hero-avatar-1.jpg", "/hero-avatar-2.jpg", "/hero-avatar-3.jpg"].map((src, i) => (
                 <img
                   key={src}
@@ -635,9 +731,9 @@ export default function PalamaHero() {
                     height: 24,
                     borderRadius: "50%",
                     objectFit: "cover",
-                    border: "2px solid #ffffff",
+                    border: "2px solid #f6f5f2",
                     marginLeft: i === 0 ? 0 : -7,
-                    filter: "grayscale(0.25)",
+                    filter: "grayscale(0.35)",
                   }}
                 />
               ))}
@@ -646,78 +742,15 @@ export default function PalamaHero() {
                   width: 24,
                   height: 24,
                   borderRadius: "50%",
-                  background: "#f4f4f5",
-                  border: "2px solid #ffffff",
+                  background: "#ffffff",
+                  border: "1px solid rgba(12,12,15,0.1)",
                   marginLeft: -7,
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Plus size={11} color="#18181b" />
-              </span>
-            </div>
-            <div style={{ fontSize: "0.84rem", fontWeight: 600, lineHeight: 1.25, color: "#0c0c0f", marginBottom: 6 }}>
-              Actions, anytime,
-              <br />
-              anywhere.
-            </div>
-            <div style={{ fontSize: "0.7rem", lineHeight: 1.4, color: "#71717a" }}>
-              Sync across desktop & cloud.
-            </div>
-          </motion.div>
-
-          {/* ── BOTTOM-LEFT SOCIAL PROOF CORNER ── */}
-          <motion.div
-            className="hero-corner-left"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.45 }}
-            style={{
-              position: "absolute",
-              left: 8,
-              bottom: 36,
-              textAlign: "left",
-              zIndex: 20,
-            }}
-          >
-            <div style={{ width: 14, height: 1, background: "rgba(12,12,15,0.35)", marginBottom: 10 }} />
-            <div style={{ fontSize: "0.74rem", lineHeight: 1.4, color: "#52525b", marginBottom: 10, maxWidth: 165 }}>
-              Trusted by builders &
-              <br />
-              creators worldwide.
-            </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {["/hero-avatar-1.jpg", "/hero-avatar-2.jpg", "/hero-avatar-3.jpg"].map((src, i) => (
-                <img
-                  key={src}
-                  src={src}
-                  alt=""
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "2px solid #f6f5f2",
-                    marginLeft: i === 0 ? 0 : -8,
-                    filter: "grayscale(0.2)",
-                  }}
-                />
-              ))}
-              <span
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: "50%",
-                  background: "#ffffff",
-                  border: "1px solid rgba(12,12,15,0.1)",
-                  marginLeft: -8,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Plus size={11} color="#18181b" />
+                <Plus size={10} color="#18181b" />
               </span>
             </div>
           </motion.div>
@@ -737,26 +770,26 @@ export default function PalamaHero() {
           }
           .hero-card-focus {
             left: 12px !important;
-            top: 90px !important;
-            width: 148px !important;
+            top: 72px !important;
+            width: 162px !important;
           }
           .hero-card-memory {
-            left: 14px !important;
-            top: 230px !important;
-            width: 148px !important;
+            left: 12px !important;
+            top: 224px !important;
+            width: 162px !important;
           }
           .hero-card-execute {
             left: auto !important;
             right: 12px !important;
-            top: 130px !important;
-            width: 148px !important;
+            top: 100px !important;
+            width: 162px !important;
           }
           .hero-card-orb {
             left: auto !important;
             right: 14px !important;
-            top: 265px !important;
-            width: 120px !important;
-            height: 82px !important;
+            top: 235px !important;
+            width: 130px !important;
+            height: 88px !important;
           }
         }
       `}</style>

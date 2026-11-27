@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Navigation from "./components/ui/Navigation";
 import Footer from "./components/ui/Footer";
@@ -13,13 +13,6 @@ const inter = Inter({
   variable: "--font-geist-sans",
 });
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-});
-
 export const metadata: Metadata = {
   title: "Palama — AI That Acts",
   description: "Palama is a new kind of AI that doesn't just think—it controls a real computer.",
@@ -31,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${instrumentSerif.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-black text-white" style={{ background: "#000", color: "#fff", margin: 0 }}>
         <ScrollToTop />
         <ActionField />
