@@ -47,6 +47,12 @@ function LoginPageContent() {
       });
 
       if (loginError) {
+        if (/email not confirmed/i.test(loginError.message)) {
+          const qs = new URLSearchParams({ email: email.trim() });
+          if (nextPath !== "/dashboard") qs.set("next", nextPath);
+          router.push(`/auth/verify?${qs.toString()}`);
+          return;
+        }
         setError(loginError.message);
         setLoading(false);
         return;
@@ -69,6 +75,24 @@ function LoginPageContent() {
           return;
         }
       }
+
+      try {
+        const res = await fetch("/api/waitlist/status", { cache: "no-store" });
+        if (res.ok) {
+          const st = await res.json();
+          if (!st.emailVerified) {
+            const qs = new URLSearchParams({ email: st.email || email.trim() });
+            if (nextPath !== "/dashboard") qs.set("next", nextPath);
+            router.push(`/auth/verify?${qs.toString()}`);
+            return;
+          }
+          if (!st.onboardingCompleted && !st.isAdmin) {
+            const qs = nextPath !== "/dashboard" ? `?next=${encodeURIComponent(nextPath)}` : "";
+            router.push(`/onboarding${qs}`);
+            return;
+          }
+        }
+      } catch {}
 
       router.push(nextPath);
       router.refresh();
@@ -100,6 +124,24 @@ function LoginPageContent() {
       });
       if (verifyError) throw verifyError;
 
+      try {
+        const res = await fetch("/api/waitlist/status", { cache: "no-store" });
+        if (res.ok) {
+          const st = await res.json();
+          if (!st.emailVerified) {
+            const qs = new URLSearchParams({ email: st.email || email.trim() });
+            if (nextPath !== "/dashboard") qs.set("next", nextPath);
+            router.push(`/auth/verify?${qs.toString()}`);
+            return;
+          }
+          if (!st.onboardingCompleted && !st.isAdmin) {
+            const qs = nextPath !== "/dashboard" ? `?next=${encodeURIComponent(nextPath)}` : "";
+            router.push(`/onboarding${qs}`);
+            return;
+          }
+        }
+      } catch {}
+
       router.push(nextPath);
       router.refresh();
     } catch (err: any) {
@@ -115,7 +157,7 @@ function LoginPageContent() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
       if (oauthError) throw oauthError;
@@ -269,7 +311,7 @@ function LoginPageContent() {
               </button>
 
               <p style={{ textAlign: "center", fontSize: "0.9rem", color: "#a1a1aa", margin: "16px 0 0" }}>
-                Don&apos;t have an account? <Link href="/auth/signup" className="auth-link" style={{ color: "#fff", textDecoration: "underline" }}>Sign up</Link>
+                Don&apos;t have an account? <Link href={nextPath !== "/dashboard" ? `/auth/signup?next=${encodeURIComponent(nextPath)}` : "/auth/signup"} className="auth-link" style={{ color: "#fff", textDecoration: "underline" }}>Create account</Link>
               </p>
             </>
           )}

@@ -16,7 +16,10 @@ import {
   AlertCircle,
   Sparkles,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  UserCheck,
+  UserX,
+  Clock
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -28,6 +31,22 @@ interface ModelItem {
   context_window?: number;
   cost_tier?: string;
   available?: boolean;
+}
+
+interface WaitlistApplicant {
+  user_id: string;
+  email: string;
+  full_name?: string | null;
+  phone?: string;
+  role?: string;
+  role_other?: string | null;
+  usage_type?: "solo" | "team";
+  team_size?: string | null;
+  use_case?: string | null;
+  onboarding_completed?: boolean;
+  email_confirmed?: boolean;
+  status: "pending" | "approved" | "rejected";
+  created_at?: string;
 }
 
 export default function AdminDashboardView() {
@@ -45,6 +64,11 @@ export default function AdminDashboardView() {
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [waitlistRows, setWaitlistRows] = useState<WaitlistApplicant[]>([]);
+  const [waitlistFilter, setWaitlistFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [waitlistSearch, setWaitlistSearch] = useState("");
+  const [loadingWaitlist, setLoadingWaitlist] = useState(true);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -84,9 +108,47 @@ export default function AdminDashboardView() {
     }
   };
 
+  const fetchWaitlist = async () => {
+    setLoadingWaitlist(true);
+    try {
+      const res = await fetch("/api/admin/waitlist", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setWaitlistRows(Array.isArray(data.applicants) ? data.applicants : []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch waitlist:", e);
+    } finally {
+      setLoadingWaitlist(false);
+    }
+  };
+
+  const handleWaitlistAction = async (userId: string, action: "approve" | "pending" | "reject") => {
+    setUpdatingUserId(userId);
+    try {
+      const res = await fetch("/api/admin/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setWaitlistRows((prev) =>
+          prev.map((row) => (row.user_id === userId ? { ...row, status: data.status } : row))
+        );
+        showNotification(`User updated to "${data.status}".`);
+      } else {
+        showNotification(data.error || "Failed to update waitlist status.");
+      }
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   useEffect(() => {
     fetchMetrics();
     fetchModels();
+    fetchWaitlist();
   }, []);
 
   // Delete model handler (client catalog filter; direct unauthenticated agent calls disabled)
@@ -170,7 +232,7 @@ export default function AdminDashboardView() {
         </div>
 
         <button
-          onClick={() => { fetchMetrics(); fetchModels(); }}
+          onClick={() => { fetchMetrics(); fetchModels(); fetchWaitlist(); }}
           style={{
             background: "var(--bg-elevated)",
             border: "1px solid var(--border-subtle)",
@@ -263,6 +325,193 @@ export default function AdminDashboardView() {
               No Active Subscriptions ($0.00)
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Waitlist & Access Approvals Section */}
+      <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: 16, padding: "24px", marginTop: 12, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 14 }}>
+          <div>
+            <h2 style={{ fontSize: "1.15rem", fontWeight: 600, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 8 }}>
+              <Clock size={18} style={{ color: "var(--signal)" }} />
+              Waitlist &amp; Access Queue
+            </h2>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-muted)" }}>
+              Review verified users&apos; phone numbers, roles, and team profiles before granting desktop access.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: "0.76rem" }}>
+            <span style={{ padding: "4px 10px", borderRadius: 999, background: "rgba(255,159,10,0.12)", color: "#ff9f0a", border: "1px solid rgba(255,159,10,0.28)" }}>
+              Pending: {waitlistRows.filter((r) => r.status === "pending").length}
+            </span>
+            <span style={{ padding: "4px 10px", borderRadius: 999, background: "rgba(52,199,89,0.12)", color: "#34c759", border: "1px solid rgba(52,199,89,0.28)" }}>
+              Approved: {waitlistRows.filter((r) => r.status === "approved").length}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input
+              type="text"
+              placeholder="Search applicant email, name, phone, or role..."
+              value={waitlistSearch}
+              onChange={(e) => setWaitlistSearch(e.target.value)}
+              style={{
+                width: "100%",
+                background: "var(--bg-surface)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: 8,
+                padding: "9px 14px 9px 38px",
+                color: "var(--text-primary)",
+                fontSize: "0.83rem",
+                outline: "none",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {(["pending", "approved", "rejected", "all"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setWaitlistFilter(tab)}
+                style={{
+                  background: waitlistFilter === tab ? "rgba(46,123,255,0.15)" : "var(--bg-surface)",
+                  border: waitlistFilter === tab ? "1px solid var(--signal)" : "1px solid var(--border-subtle)",
+                  color: waitlistFilter === tab ? "var(--signal)" : "var(--text-secondary)",
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  fontSize: "0.78rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  textTransform: "capitalize",
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ border: "1px solid var(--border-subtle)", borderRadius: 10, overflow: "hidden" }}>
+          {loadingWaitlist ? (
+            <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+              Loading waitlist applicants...
+            </div>
+          ) : (
+            (() => {
+              const filteredWaitlist = waitlistRows.filter((row) => {
+                if (waitlistFilter !== "all" && row.status !== waitlistFilter) return false;
+                const q = waitlistSearch.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  (row.email || "").toLowerCase().includes(q) ||
+                  (row.full_name || "").toLowerCase().includes(q) ||
+                  (row.phone || "").toLowerCase().includes(q) ||
+                  (row.role || "").toLowerCase().includes(q)
+                );
+              });
+              if (filteredWaitlist.length === 0) {
+                return (
+                  <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                    No applicants in this view.
+                  </div>
+                );
+              }
+              return (
+                <div style={{ maxHeight: "420px", overflowY: "auto", overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.81rem" }}>
+                    <thead>
+                      <tr style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid var(--border-subtle)", color: "var(--text-muted)" }}>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Applicant</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Phone</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Role</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Usage</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Verified</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600 }}>Status</th>
+                        <th style={{ padding: "11px 14px", fontWeight: 600, textAlign: "right" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredWaitlist.map((row) => (
+                        <tr key={row.user_id} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                          <td style={{ padding: "11px 14px" }}>
+                            <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{row.full_name || "—"}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{row.email}</div>
+                            {row.use_case && (
+                              <div style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginTop: 3, maxWidth: 240 }}>
+                                “{row.use_case}”
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: "11px 14px", color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                            {row.phone || "—"}
+                          </td>
+                          <td style={{ padding: "11px 14px", color: "var(--text-secondary)", textTransform: "capitalize" }}>
+                            {row.role === "other" && row.role_other ? row.role_other : row.role || "Pending setup"}
+                          </td>
+                          <td style={{ padding: "11px 14px", color: "var(--text-secondary)" }}>
+                            {row.usage_type === "team" ? `Team (${row.team_size || "2+"})` : "Solo"}
+                          </td>
+                          <td style={{ padding: "11px 14px" }}>
+                            <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: 8, background: row.email_confirmed ? "rgba(52,199,89,0.15)" : "rgba(255,159,10,0.12)", color: row.email_confirmed ? "#34c759" : "#ff9f0a" }}>
+                              {row.email_confirmed ? "Verified" : "Unverified"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "11px 14px" }}>
+                            <span style={{
+                              fontSize: "0.7rem",
+                              padding: "2px 8px",
+                              borderRadius: 8,
+                              textTransform: "capitalize",
+                              background: row.status === "approved" ? "rgba(52,199,89,0.15)" : row.status === "rejected" ? "rgba(239,68,68,0.15)" : "rgba(255,159,10,0.15)",
+                              color: row.status === "approved" ? "#34c759" : row.status === "rejected" ? "#ef4444" : "#ff9f0a",
+                            }}>
+                              {row.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: "11px 14px", textAlign: "right", whiteSpace: "nowrap" }}>
+                            <div style={{ display: "inline-flex", gap: 6 }}>
+                              {row.status !== "approved" && (
+                                <button
+                                  type="button"
+                                  disabled={updatingUserId === row.user_id}
+                                  onClick={() => handleWaitlistAction(row.user_id, "approve")}
+                                  style={{ background: "rgba(52,199,89,0.14)", border: "1px solid rgba(52,199,89,0.35)", color: "#34c759", padding: "5px 10px", borderRadius: 6, cursor: "pointer", fontSize: "0.74rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
+                                >
+                                  <UserCheck size={12} /> Approve
+                                </button>
+                              )}
+                              {row.status === "approved" && (
+                                <button
+                                  type="button"
+                                  disabled={updatingUserId === row.user_id}
+                                  onClick={() => handleWaitlistAction(row.user_id, "pending")}
+                                  style={{ background: "rgba(255,159,10,0.12)", border: "1px solid rgba(255,159,10,0.3)", color: "#ff9f0a", padding: "5px 10px", borderRadius: 6, cursor: "pointer", fontSize: "0.74rem", fontWeight: 600 }}
+                                >
+                                  Move to Waitlist
+                                </button>
+                              )}
+                              {row.status !== "rejected" && (
+                                <button
+                                  type="button"
+                                  disabled={updatingUserId === row.user_id}
+                                  onClick={() => handleWaitlistAction(row.user_id, "reject")}
+                                  style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.28)", color: "#ef4444", padding: "5px 10px", borderRadius: 6, cursor: "pointer", fontSize: "0.74rem", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
+                                >
+                                  <UserX size={12} /> Reject
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()
+          )}
         </div>
       </div>
 

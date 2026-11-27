@@ -12,9 +12,10 @@ export async function updateSession(request: NextRequest) {
   // avoids hammering Supabase Auth on unauthenticated requests during traffic spikes.
   const hasSessionCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
   if (!hasSessionCookie) {
-    if (pathname.startsWith('/dashboard')) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
+      url.searchParams.set('next', pathname + (request.nextUrl.search || ''))
       return NextResponse.redirect(url)
     }
     return supabaseResponse
@@ -88,24 +89,33 @@ export async function updateSession(request: NextRequest) {
     console.error('Supabase fetch failed in middleware:', err?.message || err)
   }
 
-  // Protect /dashboard and nested routes
-  if (pathname.startsWith('/dashboard') && !user) {
+  // Protect /dashboard, /onboarding and nested routes
+  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
+    url.searchParams.set('next', pathname + (request.nextUrl.search || ''))
     return NextResponse.redirect(url)
   }
 
   // If user is logged in, prevent accessing login/signup auth pages (redirect to dashboard).
-  // Exception: /auth/desktop (desktop app authorization) and /auth/callback
-  // must stay reachable for logged-in users.
+  // Exception: /auth/desktop, /auth/callback, and /auth/verify must stay reachable.
   if (
     pathname.startsWith('/auth') &&
     !pathname.startsWith('/auth/desktop') &&
     !pathname.startsWith('/auth/callback') &&
+    !pathname.startsWith('/auth/verify') &&
     user
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    const nextParam = request.nextUrl.searchParams.get('next')
+    if (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')) {
+      const parsed = new URL(nextParam, request.nextUrl.origin)
+      url.pathname = parsed.pathname
+      url.search = parsed.search
+    } else {
+      url.pathname = '/dashboard'
+      url.search = ''
+    }
     return NextResponse.redirect(url)
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
 import { getConfiguredInternalKey, isSafeTaskId } from '@/lib/security'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,14 @@ export async function GET(
   if (!caller || !ownerId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  const access = await assertApprovedAccess(ownerId)
+  if (!access.allowed) {
+    return new Response(JSON.stringify({ error: access.message, code: access.code }), {
+      status: access.httpStatus,
       headers: { 'Content-Type': 'application/json' },
     })
   }

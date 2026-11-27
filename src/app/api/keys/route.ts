@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { generateApiKey } from '@/lib/api-keys'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 /** GET /api/keys — list my API keys (no hashes ever leave the server). */
 export async function GET() {
@@ -8,6 +9,10 @@ export async function GET() {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const access = await assertApprovedAccess(user.id, user)
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.message, code: access.code }, { status: access.httpStatus })
   }
   const { data, error: dbError } = await supabase
     .from('api_keys')
@@ -26,6 +31,10 @@ export async function POST(request: Request) {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const access = await assertApprovedAccess(user.id, user)
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.message, code: access.code }, { status: access.httpStatus })
   }
   let name = 'Default key'
   try {
@@ -66,6 +75,10 @@ export async function DELETE(request: Request) {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const access = await assertApprovedAccess(user.id, user)
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.message, code: access.code }, { status: access.httpStatus })
   }
   const id = new URL(request.url).searchParams.get('id')
   if (!id) {

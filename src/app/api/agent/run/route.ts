@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { validateApiKey, logApiUsage } from '@/lib/api-keys'
 import { checkRateLimit, getConfiguredInternalKey, isUuid } from '@/lib/security'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,14 @@ export async function POST(request: Request) {
     const ownerId = user?.id || keyOwnerId
     if (!ownerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const access = await assertApprovedAccess(ownerId, user || null)
+    if (!access.allowed) {
+      return NextResponse.json(
+        { error: access.message, code: access.code },
+        { status: access.httpStatus }
+      )
     }
 
     const rl = checkRateLimit(`agent-run:${ownerId}`, 30, 60_000)

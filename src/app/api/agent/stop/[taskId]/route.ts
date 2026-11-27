@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveGatewayCaller, resolveOwnerId } from '@/lib/gateway'
 import { getConfiguredInternalKey, isSafeTaskId } from '@/lib/security'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 export async function POST(
   request: NextRequest,
@@ -10,6 +11,11 @@ export async function POST(
   const ownerId = caller ? resolveOwnerId(caller) : null
   if (!caller || !ownerId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const access = await assertApprovedAccess(ownerId)
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.message, code: access.code }, { status: access.httpStatus })
   }
 
   const { taskId } = await params

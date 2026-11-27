@@ -63,6 +63,7 @@ export const config = {
    */
   matcher: [
     '/dashboard/:path*',
+    '/onboarding/:path*',
     '/auth/:path*',
     '/api/((?!webhooks/infra).*)',
   ],

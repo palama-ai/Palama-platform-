@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { validateApiKey, logApiUsage } from '@/lib/api-keys'
 import { getQuota, recordTokenUsage, extractGatewayUsage, isRealUser } from '@/lib/token-usage'
 import { checkRateLimit, clientIdentifier, verifyInternalKey } from '@/lib/security'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 export type GatewayCaller =
   | { kind: 'session'; userId: string }
@@ -111,6 +112,13 @@ export async function forwardToGateway(
         { status: 401 }
       )
     }
+  }
+  const access = await assertApprovedAccess(ownerId)
+  if (!access.allowed) {
+    return NextResponse.json(
+      { error: access.message, code: access.code },
+      { status: access.httpStatus }
+    )
   }
   let loggedModel = ''
   try {

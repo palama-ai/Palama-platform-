@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { resolveGatewayCaller, resolveOwnerId, forwardToGateway } from '@/lib/gateway'
 import { getQuota, recordTokenUsage } from '@/lib/token-usage'
 import { logApiUsage } from '@/lib/api-keys'
+import { assertApprovedAccess } from '@/lib/waitlist'
 
 /**
  * POST /api/images/generations — image generation via Palama.
@@ -21,6 +22,10 @@ export async function POST(request: Request) {
   const userId = caller ? resolveOwnerId(caller) : null
   if (!caller || !userId) {
     return NextResponse.json({ error: 'Login required' }, { status: 401 })
+  }
+  const access = await assertApprovedAccess(userId)
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.message, code: access.code }, { status: access.httpStatus })
   }
   const verifiedCaller = caller
   let body = ''

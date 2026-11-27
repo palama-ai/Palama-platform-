@@ -1,11 +1,24 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("@")) return "/dashboard";
+  return raw;
+}
+
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupPageContent />
+    </Suspense>
+  );
+}
+
+function SignupPageContent() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [name, setName] = useState("");
@@ -13,7 +26,12 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const nextPath = safeNext(searchParams.get("next"));
+  const onboardingNext =
+    nextPath !== "/dashboard" ? `/onboarding?next=${encodeURIComponent(nextPath)}` : "/onboarding";
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,16 +39,15 @@ export default function SignupPage() {
     setError(null);
 
     try {
-      const { error: signupError } = await supabase.auth.signUp({
-        email,
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: email.trim(),
         password: pass,
         options: {
           data: {
-            full_name: name,
+            full_name: name.trim(),
           },
-          // Explicit redirect: never fall back to the dashboard Site URL
-          // (localhost) for the confirmation link.
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          // Confirmation link points back to /auth/callback which routes to /onboarding (and preserves desktop next)
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(onboardingNext)}`,
         },
       });
 
@@ -40,8 +57,19 @@ export default function SignupPage() {
         return;
       }
 
-      // Supabase sends a confirmation email by default
-      router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
+      const confirmedNow = Boolean(
+        signupData?.session &&
+          (signupData?.user?.email_confirmed_at || (signupData?.user as any)?.confirmed_at)
+      );
+      if (confirmedNow) {
+        router.push(onboardingNext);
+        router.refresh();
+        return;
+      }
+
+      const verifyParams = new URLSearchParams({ email: email.trim() });
+      if (nextPath !== "/dashboard") verifyParams.set("next", nextPath);
+      router.push(`/auth/verify?${verifyParams.toString()}`);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
       setLoading(false);
@@ -55,7 +83,7 @@ export default function SignupPage() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
         },
       });
       if (oauthError) throw oauthError;
@@ -64,6 +92,9 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+
+  const loginHref =
+    nextPath !== "/dashboard" ? `/auth/login?next=${encodeURIComponent(nextPath)}` : "/auth/login";
 
   return (
     <div className="auth-split">
@@ -121,7 +152,7 @@ export default function SignupPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Palama<br />Persona
+          Palama<br />Co-Worker
         </motion.div>
       </div>
 
@@ -135,7 +166,7 @@ export default function SignupPage() {
         >
           <div>
             <h1 className="auth-title">Create an account</h1>
-            <p className="auth-sub">Start automating in seconds.</p>
+            <p className="auth-sub">Join the Palama Co-Worker early access waitlist.</p>
           </div>
 
           {error && <div className="auth-error">{error}</div>}
@@ -151,11 +182,11 @@ export default function SignupPage() {
             </div>
             <div className="auth-field">
               <label className="auth-label">Password</label>
-              <input className="auth-input" type="password" placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} required disabled={loading} />
+              <input className="auth-input" type="password" placeholder="••••••••" minLength={6} value={pass} onChange={e => setPass(e.target.value)} required disabled={loading} />
             </div>
             
             <button type="submit" className="auth-btn" style={{ marginTop: 8 }} disabled={loading}>
-              {loading ? "Signing up..." : "Sign up"}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
@@ -167,7 +198,7 @@ export default function SignupPage() {
           </button>
 
           <p style={{ textAlign: "center", fontSize: "0.9rem", color: "#a1a1aa", margin: "16px 0 0" }}>
-            Already have an account? <Link href="/auth/login" className="auth-link" style={{ color: "#fff", textDecoration: "underline" }}>Sign in</Link>
+            Already have an account? <Link href={loginHref} className="auth-link" style={{ color: "#fff", textDecoration: "underline" }}>Sign in</Link>
           </p>
         </motion.div>
       </div>

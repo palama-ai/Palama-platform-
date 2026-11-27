@@ -74,6 +74,8 @@ export default function DashboardPage() {
   // Auth & Profile
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [waitlistState, setWaitlistState] = useState<any>(null);
+  const [checkingWaitlist, setCheckingWaitlist] = useState(false);
   const [fullName, setFullName] = useState("");
   const [copiedId, setCopiedId] = useState(false);
 
@@ -148,6 +150,24 @@ export default function DashboardPage() {
           if (!cancelled) router.push("/auth/login");
           return;
         }
+        // Authoritative verification + onboarding + waitlist status gate
+        try {
+          const wRes = await fetch("/api/waitlist/status", { cache: "no-store" });
+          if (wRes.ok) {
+            const wData = await wRes.json();
+            if (cancelled) return;
+            if (!wData.emailVerified) {
+              router.replace(`/auth/verify?email=${encodeURIComponent(wData.email || currentUser.email || "")}`);
+              return;
+            }
+            if (!wData.onboardingCompleted && !wData.isAdmin) {
+              router.replace("/onboarding");
+              return;
+            }
+            setWaitlistState(wData);
+          }
+        } catch {}
+
         if (!cancelled) {
           setUser(currentUser);
           setFullName((currentUser.user_metadata?.full_name as string) || "George");
@@ -207,6 +227,37 @@ export default function DashboardPage() {
       loadDevices();
     }
   }, [user]);
+
+  // 2b. Poll waitlist status if currently on waitlist
+  useEffect(() => {
+    if (!waitlistState || waitlistState.approved || waitlistState.isAdmin) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/waitlist/status", { cache: "no-store" });
+        if (!res.ok) return;
+        const st = await res.json();
+        if (cancelled) return;
+        if (st.approved || st.isAdmin) {
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            try {
+              new Notification("Welcome to Palama Co-Worker", {
+                body: "Your waitlist spot has been approved! Your account is now unlocked.",
+              });
+            } catch {}
+          }
+          setWaitlistState(st);
+        } else {
+          setWaitlistState(st);
+        }
+      } catch {}
+    };
+    const interval = setInterval(poll, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [waitlistState]);
 
   // 3. Weekly Reset Countdown (Resets every Monday 00:00 UTC)
   useEffect(() => {
@@ -327,6 +378,87 @@ export default function DashboardPage() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#d9dce1" }}>
         <RefreshCw size={28} className="animate-spin" style={{ color: "#4b5563" }} />
+      </div>
+    );
+  }
+
+  // Tamper-proof Waitlist Gate (also enforced server-side on every API route)
+  if (!waitlistState || (!waitlistState.approved && !waitlistState.isAdmin)) {
+    const isRejected = waitlistState?.status === "rejected";
+    const profile = waitlistState?.profile;
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#09090b", color: "#fafafa", padding: "28px 18px", fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+        <div style={{ width: "100%", maxWidth: 460, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 18, padding: "32px 28px", textAlign: "center" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <Clock size={24} />
+          </div>
+          <h1 style={{ fontSize: "1.55rem", fontWeight: 700, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+            {isRejected ? "Waitlist update" : "You're in the waitlist"}
+          </h1>
+          <p style={{ fontSize: "0.92rem", color: "#a1a1aa", margin: "0 0 20px", lineHeight: 1.55 }}>
+            {isRejected
+              ? "Thank you for applying for Palama Co-Worker. Your account is not approved for this wave."
+              : "Thanks for verifying your account and sharing how you plan to use Palama. When we open your spot, you will receive an instant notification on your computer."}
+          </p>
+
+          <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "14px 16px", marginBottom: 20, textAlign: "left", display: "flex", flexDirection: "column", gap: 8, fontSize: "0.84rem", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <span style={{ color: "#71717a" }}>Account</span>
+              <span style={{ color: "#fff", fontWeight: 500 }}>{user?.email}</span>
+            </div>
+            {profile?.role && (
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <span style={{ color: "#71717a" }}>Profile</span>
+                <span style={{ color: "#e4e4e7", textTransform: "capitalize" }}>
+                  {profile.role === "other" && profile.role_other ? profile.role_other : profile.role} • {profile.usage_type === "team" ? `Team (${profile.team_size || "2+"})` : "Solo"}
+                </span>
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <span style={{ color: "#71717a" }}>Status</span>
+              <span style={{ color: isRejected ? "#f87171" : "#fbbf24", fontWeight: 600 }}>
+                {isRejected ? "Not Approved" : "Waiting for Approval"}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              type="button"
+              disabled={checkingWaitlist}
+              onClick={async () => {
+                setCheckingWaitlist(true);
+                try {
+                  const r = await fetch("/api/waitlist/status", { cache: "no-store" });
+                  if (r.ok) setWaitlistState(await r.json());
+                } finally {
+                  setCheckingWaitlist(false);
+                }
+              }}
+              style={{ width: "100%", padding: "11px 16px", borderRadius: 10, border: "none", background: "#fff", color: "#000", fontWeight: 600, fontSize: "0.92rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <RefreshCw size={15} className={checkingWaitlist ? "animate-spin" : ""} />
+              {checkingWaitlist ? "Checking..." : "Refresh status"}
+            </button>
+
+            <Link
+              href="/download"
+              style={{ width: "100%", padding: "11px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.16)", background: "transparent", color: "#fff", fontWeight: 500, fontSize: "0.9rem", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <Download size={15} />
+              Download Palama Desktop
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{ width: "100%", padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.08)", color: "#fca5a5", fontWeight: 500, fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              <LogOut size={14} />
+              Sign out
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

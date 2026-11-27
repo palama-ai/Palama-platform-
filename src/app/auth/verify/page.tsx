@@ -1,105 +1,137 @@
 "use client";
 import Link from "next/link";
-import { useState, useRef, useEffect, Suspense } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle2, Mail, RefreshCw } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.includes("@")) return "/dashboard";
+  return raw;
+}
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={
-      <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#000", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontFamily: "sans-serif" }}>
-        Loading...
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div style={{ display: "flex", minHeight: "100vh", width: "100%", background: "#000", alignItems: "center", justifyContent: "center", color: "#a1a1aa", fontFamily: "sans-serif" }}>
+          Loading...
+        </div>
+      }
+    >
       <VerifyPageContent />
     </Suspense>
   );
 }
 
 function VerifyPageContent() {
-  const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [resent, setResent] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [checking, setChecking] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const refs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const email = (searchParams.get("email") || "").trim();
+  const nextPath = safeNext(searchParams.get("next"));
+  const onboardingDest =
+    nextPath !== "/dashboard" ? `/onboarding?next=${encodeURIComponent(nextPath)}` : "/onboarding";
+
   const supabase = createClient();
 
-  const handleChange = (i: number, v: string) => {
-    if (v.length > 1) v = v[v.length - 1];
-    if (!/^\d?$/.test(v)) return;
-    const next = [...code];
-    next[i] = v;
-    setCode(next);
-    if (v && i < 5) refs.current[i + 1]?.focus();
-  };
-
-  const handleKey = (i: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !code[i] && i > 0) refs.current[i - 1]?.focus();
-  };
-
-  const handleVerify = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = code.join("");
-      if (token.length < 6) {
-        setError("Please enter the 6-digit verification code.");
-        setLoading(false);
-        return;
+  const checkVerificationStatus = useCallback(
+    async (manual = false) => {
+      if (manual) {
+        setChecking(true);
+        setNotice(null);
+        setError(null);
       }
-
-      // Try verifying via OTP signup type
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "signup",
-      });
-
-      if (verifyError) {
-        // Fallback to "email" type
-        const { error: verifyError2 } = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: "email",
-        });
-
-        if (verifyError2) {
-          setError(verifyError2.message);
-          setLoading(false);
+      try {
+        // Refresh / read authoritative server user state
+        const res = await fetch("/api/waitlist/status", { cache: "no-store" });
+        if (res.ok) {
+          const st = await res.json();
+          if (st.emailVerified) {
+            setVerified(true);
+            const target = st.onboardingCompleted || st.isAdmin ? nextPath : onboardingDest;
+            router.replace(target);
+            return;
+          }
+        }
+        const { data } = await supabase.auth.getUser();
+        if (data?.user && (data.user.email_confirmed_at || (data.user as any).confirmed_at)) {
+          setVerified(true);
+          router.replace(onboardingDest);
           return;
         }
+        if (manual) {
+          setNotice("Still waiting for confirmation — open the verification link in your inbox, or click Sign in if you confirmed on another device.");
+        }
+      } catch {
+        if (manual) {
+          setError("Could not check verification right now. Please try again.");
+        }
+      } finally {
+        if (manual) setChecking(false);
       }
+    },
+    [nextPath, onboardingDest, router, supabase]
+  );
 
-      // Success - Redirect to dashboard
-      window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
-      setLoading(false);
-    }
-  };
+  // Poll automatically every 3 seconds + on window focus (catches confirmation opened in another browser tab)
+  useEffect(() => {
+    checkVerificationStatus(false);
+    const id = setInterval(() => checkVerificationStatus(false), 3000);
+    const onFocus = () => checkVerificationStatus(false);
+    window.addEventListener("focus", onFocus);
+
+    const { data: authSub } = supabase.auth.onAuthStateChange((_evt, sess) => {
+      if (sess?.user && (sess.user.email_confirmed_at || (sess.user as any).confirmed_at)) {
+        setVerified(true);
+        router.replace(onboardingDest);
+      }
+    });
+
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+      authSub.subscription.unsubscribe();
+    };
+  }, [checkVerificationStatus, onboardingDest, router, supabase]);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   const handleResend = async () => {
+    if (!email || cooldown > 0) return;
     setError(null);
+    setNotice(null);
     try {
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
         email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(onboardingDest)}`,
+        },
       });
       if (resendError) {
         setError(resendError.message);
         return;
       }
       setResent(true);
+      setCooldown(30);
     } catch (err: any) {
-      setError(err.message || "Could not resend code.");
+      setError(err?.message || "Could not resend verification link.");
     }
   };
 
-  useEffect(() => { refs.current[0]?.focus(); }, []);
+  const loginUrl = `/auth/login?next=${encodeURIComponent(onboardingDest)}`;
 
   return (
     <div className="auth-split">
@@ -107,109 +139,107 @@ function VerifyPageContent() {
         * { box-sizing: border-box; }
         body { background: #000; margin: 0; color: #ededed; }
         .auth-split { display: flex; min-height: 100vh; width: 100%; background: #000; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        
         .auth-left { display: none; flex: 1.2; position: relative; overflow: hidden; border-right: 1px solid rgba(255,255,255,0.05); align-items: center; justify-content: flex-start; padding-left: 8vw; background: #000; }
         @media (min-width: 992px) { .auth-left { display: flex; } }
-        
         .auth-right { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; position: relative; background: #000; }
-        
         .massive-brand-text { font-size: clamp(5rem, 12vw, 14rem); font-weight: 800; line-height: 0.85; letter-spacing: -0.04em; color: transparent; background: linear-gradient(180deg, #52525b 0%, #18181b 100%); -webkit-background-clip: text; background-clip: text; user-select: none; pointer-events: none; position: relative; z-index: 10; }
-        .massive-sub-text { font-size: 0.6em; margin-left: 16px; background: linear-gradient(180deg, #27272a 0%, #000000 90%); -webkit-background-clip: text; background-clip: text; display: block; }
-        
-        .auth-card { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 10; align-items: center; }
-        .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; justify-content: center; text-decoration: none; color: #fff; font-weight: 600; font-size: 1.15rem; }
-        .auth-logo img { width: 28px; height: 28px; }
-        .auth-title { font-size: 1.75rem; font-weight: 600; color: #fff; text-align: center; margin: 0 0 8px; letter-spacing: -0.02em; }
-        .auth-sub { font-size: 0.95rem; color: #a1a1aa; text-align: center; margin: 0; line-height: 1.5; }
-        .auth-note { font-size: 0.85rem; color: #71717a; text-align: center; margin: 0; line-height: 1.4; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; width: 100%; }
-        
-        .code-inputs { display: flex; gap: 12px; margin: 12px 0 24px; }
-        .code-box { width: 48px; height: 56px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #fff; font-size: 1.25rem; font-weight: 500; text-align: center; font-family: 'Space Mono', monospace; outline: none; transition: all 0.2s; }
-        .code-box:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); }
-        
-        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #fff; color: #000; font-size: 0.95rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .auth-btn:hover:not(:disabled) { background: #e4e4e7; transform: translateY(-1px); }
-        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .auth-link { color: #a1a1aa; text-decoration: none; transition: color 0.2s; background: none; border: none; font-size: 0.9rem; font-family: inherit; cursor: pointer; padding: 0; }
-        .auth-link:hover { color: #fff; text-decoration: underline; }
-        
-        .error-banner { width: 100%; padding: 4px 0; color: #f87171; font-size: 0.85rem; text-align: center; }
-
+        .auth-card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 10; }
+        .verify-icon-badge { width: 52px; height: 52px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; color: #fff; }
+        .auth-title { font-size: 1.7rem; font-weight: 600; color: #fff; text-align: center; margin: 0 0 8px; letter-spacing: -0.02em; }
+        .auth-sub { font-size: 0.94rem; color: #a1a1aa; text-align: center; margin: 0; line-height: 1.55; }
+        .email-pill { display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-weight: 600; font-size: 0.86rem; word-break: break-all; }
+        .steps-box { border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.025); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; font-size: 0.86rem; color: #d4d4d8; }
+        .step-row { display: flex; align-items: flex-start; gap: 10px; line-height: 1.45; }
+        .step-num { width: 20px; height: 20px; border-radius: 999px; background: rgba(255,255,255,0.12); color: #fff; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #fff; color: #000; font-size: 0.94rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+        .auth-btn:hover { background: #e4e4e7; transform: translateY(-1px); }
+        .auth-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+        .auth-btn-outline { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-size: 0.9rem; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+        .auth-btn-outline:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+        .auth-btn-outline:disabled { opacity: 0.55; cursor: not-allowed; }
+        .auth-error { color: #f87171; font-size: 0.86rem; text-align: center; }
+        .auth-notice { color: #a1a1aa; font-size: 0.84rem; text-align: center; line-height: 1.45; }
+        .auth-success { color: #34d399; font-size: 0.86rem; text-align: center; }
         .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(46,123,255,0.05) 0%, transparent 60%); border-radius: 50%; filter: blur(60px); pointer-events: none; }
         .ambient-glow-2 { position: absolute; bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(0,212,136,0.03) 0%, transparent 60%); border-radius: 50%; filter: blur(80px); pointer-events: none; }
       `}</style>
 
-      {/* Left Panel - Brand */}
       <div className="auth-left">
         <div className="ambient-glow-1" />
         <div className="ambient-glow-2" />
-        <motion.div 
+        <motion.div
           className="massive-brand-text"
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Palama<br />Persona
+          Confirm<br />Account
         </motion.div>
       </div>
 
-      {/* Right Panel - Form */}
       <div className="auth-right">
-        <motion.div 
+        <motion.div
           className="auth-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div>
-            <h1 className="auth-title">Check your email</h1>
+          <div style={{ textAlign: "center" }}>
+            <div className="verify-icon-badge">
+              {verified ? <CheckCircle2 size={24} color="#34d399" /> : <Mail size={24} />}
+            </div>
+            <h1 className="auth-title">{verified ? "Email confirmed!" : "Check your email"}</h1>
             <p className="auth-sub">
-              We sent a verification link & code to<br />
-              <strong style={{ color: "#fff", fontWeight: 500 }}>{email}</strong>
+              We sent a confirmation <strong>link</strong> to
             </p>
+            {email ? <span className="email-pill">{email}</span> : <span className="email-pill">your email address</span>}
           </div>
 
-          {error && <div className="error-banner">{error}</div>}
-
-          <div className="code-inputs">
-            {code.map((digit, i) => (
-              <input
-                key={i}
-                ref={el => { refs.current[i] = el; }}
-                className="code-box"
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={e => handleChange(i, e.target.value)}
-                onKeyDown={e => handleKey(i, e)}
-                disabled={loading}
-              />
-            ))}
+          <div className="steps-box">
+            <div className="step-row">
+              <span className="step-num">1</span>
+              <span>Open the verification email from Palama in your inbox (check spam/promotions if needed).</span>
+            </div>
+            <div className="step-row">
+              <span className="step-num">2</span>
+              <span>Click the <strong>Confirm your email</strong> link inside the message — no code needed.</span>
+            </div>
+            <div className="step-row">
+              <span className="step-num">3</span>
+              <span>Once confirmed, you will continue automatically to complete your quick waitlist profile.</span>
+            </div>
           </div>
 
-          <button className="auth-btn" onClick={handleVerify} disabled={loading}>
-            {loading ? "Verifying..." : "Verify Account"}
-          </button>
+          {error && <div className="auth-error">{error}</div>}
+          {resent && <div className="auth-success">A new verification link has been sent!</div>}
+          {notice && <div className="auth-notice">{notice}</div>}
 
-          <p className="auth-note">
-            💡 <strong>Direct Access:</strong> You can also just click the verification link in the email we sent you, then refresh or return here.
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              type="button"
+              className="auth-btn"
+              onClick={() => checkVerificationStatus(true)}
+              disabled={checking || verified}
+            >
+              <RefreshCw size={15} className={checking ? "animate-spin" : ""} />
+              {verified ? "Redirecting..." : checking ? "Checking confirmation..." : "I clicked the link — Continue"}
+            </button>
 
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            {resent ? (
-              <span style={{ color: "#a1a1aa", fontSize: "0.9rem" }}>Verification email resent</span>
-            ) : (
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "#a1a1aa" }}>
-                Didn&apos;t receive the code? <button className="auth-link" onClick={handleResend}>Resend email</button>
-              </p>
+            {email && (
+              <button
+                type="button"
+                className="auth-btn-outline"
+                onClick={handleResend}
+                disabled={cooldown > 0}
+              >
+                {cooldown > 0 ? `Resend link in ${cooldown}s` : "Resend verification link"}
+              </button>
             )}
-          </div>
 
-          <Link href="/auth/login" className="auth-link" style={{ marginTop: 24 }}>
-            ← Back to sign in
-          </Link>
+            <Link href={loginUrl} className="auth-btn-outline">
+              Verified on another device? Sign in
+            </Link>
+          </div>
         </motion.div>
       </div>
     </div>
