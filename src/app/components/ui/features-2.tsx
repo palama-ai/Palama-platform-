@@ -45,7 +45,7 @@ export function Features({ featuresSubtitle = "Capabilities" }: FeaturesProps) {
 
 function Card({ number, title, description }: { number: string, title: string, description: string }) {
     return (
-        <BentoItem className="w-full">
+        <BentoItem className="w-full !p-0">
             <div style={{ padding: '24px', background: 'transparent' }}>
                 <div style={{ marginBottom: 20 }}>
                     <div style={{ 

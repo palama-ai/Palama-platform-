@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --background: #000000;
@@ -22,43 +20,74 @@
   --text-7xl: 5.5rem;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-/* White text selection — override browser blue default */
-::selection {
-  background: #ffffff;
-  color: #000000;
-}
+  /* White text selection — override browser blue default */
+  ::selection {
+    background: #ffffff;
+    color: #000000;
+  }
 
-::-moz-selection {
-  background: #ffffff;
-  color: #000000;
+  ::-moz-selection {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  /* Heading Typography System (inside @layer base so Tailwind utilities like text-2xl always win) */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: clamp(var(--text-4xl), 8vw, var(--text-7xl));
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+  }
+
+  h2 {
+    font-size: clamp(var(--text-3xl), 5vw, var(--text-5xl));
+    line-height: 1.1;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+
+  h3 {
+    font-size: clamp(var(--text-2xl), 3vw, var(--text-3xl));
+    line-height: 1.2;
+    font-weight: 400;
+  }
+
+  p {
+    line-height: 1.6;
+  }
 }
 
 /* Utilities */
@@ -85,35 +114,6 @@ a {
   }
 }
 
-/* Heading Typography System */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
-}
-
-h1 {
-  font-size: clamp(var(--text-4xl), 8vw, var(--text-7xl));
-  line-height: 1.05;
-  font-weight: 500;
-  letter-spacing: -0.04em;
-}
-
-h2 {
-  font-size: clamp(var(--text-3xl), 5vw, var(--text-5xl));
-  line-height: 1.1;
-  font-weight: 400;
-  letter-spacing: -0.03em;
-}
-
-h3 {
-  font-size: clamp(var(--text-2xl), 3vw, var(--text-3xl));
-  line-height: 1.2;
-  font-weight: 400;
-}
-
-p {
-  line-height: 1.6;
-}
-
 .text-editorial {
   font-size: var(--text-lg);
   color: #a1a1aa;
@@ -137,8 +137,8 @@ p {
 .bento-item {
   position: relative;
   border-radius: 0.75rem;
-  background: #050505;
-  border: 1px solid transparent;
+  background: #08080a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   display: flex;
   flex-direction: column;

@@ -65,11 +65,13 @@ export const CyberneticBentoGrid = () => {
                         <h2 className="text-xl font-bold text-white">Secure Auth</h2>
                         <p className="mt-2 text-gray-400 text-sm">Enterprise-grade authentication and user management built-in.</p>
                     </BentoItem>
-                    <BentoItem className="row-span-2">
-                        <Database className="w-6 h-6 text-white mb-4" />
-                        <h2 className="text-xl font-bold text-white">Automated Backups</h2>
-                        <p className="mt-2 text-gray-400 text-sm mb-4">Your data is always safe with automated, redundant backups.</p>
-                        <div className="flex-1 rounded-lg overflow-hidden">
+                    <BentoItem className="row-span-2 flex flex-col justify-between">
+                        <div>
+                            <Database className="w-6 h-6 text-white mb-4" />
+                            <h2 className="text-xl font-bold text-white">Automated Backups</h2>
+                            <p className="mt-2 text-gray-400 text-sm mb-4">Your data is always safe with automated, redundant backups.</p>
+                        </div>
+                        <div className="h-44 rounded-lg overflow-hidden">
                             <img 
                                 src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=400" 
                                 alt="Server backups" 
@@ -82,7 +84,7 @@ export const CyberneticBentoGrid = () => {
                         <h2 className="text-xl font-bold text-white">Serverless Functions</h2>
                         <p className="mt-2 text-gray-400 text-sm">Run your backend code without managing servers. Scale infinitely with ease.</p>
                     </BentoItem>
-                    <BentoItem>
+                    <BentoItem className="col-span-1 md:col-span-2">
                         <Terminal className="w-6 h-6 text-white mb-4" />
                         <h2 className="text-xl font-bold text-white">CLI Tool</h2>
                         <p className="mt-2 text-gray-400 text-sm">Manage your entire infrastructure from the command line.</p>
