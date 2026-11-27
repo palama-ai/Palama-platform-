@@ -4,14 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Cpu, Globe, ShieldCheck, Command, Plus } from "lucide-react";
 
-function FourPointStar({ size = 12, color = "#0c0c0f" }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} aria-hidden="true">
-      <path d="M12 0L14.6 9.4L24 12L14.6 14.6L12 24L9.4 14.6L0 12L9.4 9.4L12 0Z" />
-    </svg>
-  );
-}
-
 export default function PalamaHero() {
   return (
     <section
@@ -28,44 +20,6 @@ export default function PalamaHero() {
         boxShadow: "0 24px 80px rgba(0, 0, 0, 0.45)",
       }}
     >
-      {/* Top-Right Static Stamp Badge */}
-      <div
-        className="hero-stamp-badge"
-        style={{
-          position: "absolute",
-          top: "calc(var(--nav-height) + 22px)",
-          right: "clamp(20px, 5vw, 68px)",
-          width: 74,
-          height: 74,
-          zIndex: 20,
-          pointerEvents: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <svg viewBox="0 0 100 100" width={74} height={74} style={{ position: "absolute", inset: 0 }}>
-          <defs>
-            <path
-              id="palama-stamp-circle"
-              d="M 50, 50 m -36, 0 a 36,36 0 1,1 72,0 a 36,36 0 1,1 -72,0"
-            />
-          </defs>
-          <text
-            fill="#18181b"
-            fontSize="7.3"
-            fontWeight="600"
-            letterSpacing="2.3"
-            style={{ textTransform: "uppercase" }}
-          >
-            <textPath href="#palama-stamp-circle" startOffset="0%">
-              • AUTONOMOUS AI • PALAMA OS
-            </textPath>
-          </text>
-        </svg>
-        <FourPointStar size={12} color="#18181b" />
-      </div>
-
       {/* Main Content Container */}
       <div
         style={{
@@ -691,7 +645,6 @@ export default function PalamaHero() {
       {/* Responsive adjustments for smaller screens */}
       <style jsx>{`
         @media (max-width: 960px) {
-          .hero-stamp-badge,
           .hero-orbit-lines,
           .hero-card-outer-left,
           .hero-card-outer-right,
